@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세이브샵 · 가게 열 때도 닫을 때도, 전화 한 통이면 끝</title>
+<meta name="description" content="카드단말기·포스기·키오스크·테이블오더·스마트자판기부터 가전렌탈·인터넷·철거·원상복구까지. 설치비 0원, 여기저기 알아볼 필요 없이 전화 한 통으로 접수하는 소상공인 매장 토탈 솔루션. 무료 상담 세이브샵 010-4668-4942.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* light base */
+    --bg:#ffffff;
+    --bg-2:#f6f8fa;
+    --bg-3:#eef1f5;
+    --ink:#0c0e14;
+    --ink-2:#2a2e3a;
+    --muted:#5b6275;
+    --muted-2:#9aa1b2;
+    --line:rgba(12,14,20,.10);
+    --line-2:rgba(12,14,20,.16);
+    /* neon accent (kept) */
+    --neon:#16c172;          /* 흰 배경에서도 또렷한 그린(밝은 네온은 흰 위에서 안 보여 약간 진하게) */
+    --neon-bright:#39ff9e;   /* 다크 히어로 전용 밝은 네온 */
+    --neon-dim:#0fa862;
+    --neon-soft:rgba(22,193,114,.12);
+    --cyan:#0bb6d6;
+    /* dark hero tokens */
+    --d-bg:#06070a;
+    --d-bg-2:#0c0e14;
+    --d-bg-3:#121521;
+    --d-ink:#f4f6fb;
+    --d-muted:#8b92a8;
+    --d-muted-2:#5b6178;
+    --d-line:rgba(255,255,255,.09);
+    --d-line-2:rgba(57,255,158,.25);
+    --display:'Space Grotesk',sans-serif;
+    --body:'IBM Plex Sans KR',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body);background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.7;
+    word-break:keep-all;overflow-wrap:break-word;
+  }
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--neon);color:#fff}
+
+  /* normal scroll (snap 제거: 흰 배경 정보형은 일반 스크롤이 읽기 편함) */
+  .scroller{}
+  .panel{
+    position:relative;
+    padding:110px 24px 90px;overflow:hidden;
+  }
+  .inner{width:100%;max-width:1100px;margin:0 auto;position:relative;z-index:2}
+
+  /* grain + glow backgrounds */
+  .glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;z-index:0;pointer-events:none}
+  .glow.g1{width:480px;height:480px;background:var(--neon);top:-160px;right:-120px;opacity:.06}
+  .glow.g2{width:420px;height:420px;background:var(--cyan);bottom:-180px;left:-120px;opacity:.05}
+  .grid-bg{position:absolute;inset:0;z-index:0;opacity:.5;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:60px 60px;
+    -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,#000,transparent 80%);
+    mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,#000,transparent 80%);
+  }
+
+  /* ---- fixed top nav ---- */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--line);transition:all .3s;
+  }
+  /* 히어로 위에 있을 때(최상단)는 투명 다크 */
+  .topbar.on-hero{background:linear-gradient(180deg,rgba(6,7,10,.85),transparent);border-bottom-color:transparent}
+  .topbar.on-hero .logo{color:var(--d-ink)}
+  .topbar.on-hero .logo small{color:var(--d-muted)}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--ink);transition:color .3s;white-space:nowrap;flex-shrink:0}
+  .logo .mark{width:30px;height:30px;border-radius:9px;background:var(--neon);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px}
+  .logo small{font-family:var(--body);font-weight:400;font-size:10px;color:var(--muted);letter-spacing:.12em;margin-left:1px;transition:color .3s}
+  .top-cta{display:flex;align-items:center;gap:14px}
+  /* 상단 메뉴 */
+  .top-menu{display:flex;align-items:center;gap:26px;font-family:var(--body);font-weight:500;font-size:14.5px}
+  .top-menu a{color:var(--ink-2);transition:color .15s;position:relative;padding:4px 0}
+  .top-menu a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--neon);transition:width .2s}
+  .top-menu a:hover{color:var(--neon-dim)}
+  .top-menu a:hover::after{width:100%}
+  .soon{display:inline-block;margin-left:5px;font-size:9.5px;font-weight:600;letter-spacing:0;color:var(--muted-2);background:var(--bg-3);border:1px solid var(--line);padding:1px 5px;border-radius:5px;vertical-align:middle;transform:translateY(-1px)}
+  .topbar.on-hero .soon{color:var(--d-muted);background:rgba(255,255,255,.08);border-color:var(--d-line)}
+  .topbar.on-hero .top-menu a{color:var(--d-muted)}
+  .topbar.on-hero .top-menu a:hover{color:var(--neon-bright)}
+  .topbar.on-hero .top-menu a::after{background:var(--neon-bright)}
+  .menu-toggle{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:6px}
+  .menu-toggle span{width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s,background .3s}
+  .topbar.on-hero .menu-toggle span{background:var(--d-ink)}
+  .menu-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .menu-toggle.open span:nth-child(2){opacity:0}
+  .menu-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  .top-phone{font-family:var(--display);font-weight:600;font-size:15px;color:var(--neon-dim);display:flex;align-items:center;gap:7px}
+  .topbar.on-hero .top-phone{color:var(--neon-bright)}
+  .top-btn{font-family:var(--body);font-weight:600;font-size:13.5px;padding:9px 16px;border-radius:100px;background:var(--neon);color:#fff;transition:all .15s}
+  .top-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px -8px var(--neon)}
+  /* 모바일 전용 아이콘 전화 버튼 (데스크톱 숨김) */
+  .top-call-icon{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--neon);color:#fff;font-size:17px;flex-shrink:0}
+  /* 햄버거 메뉴 안 상담 CTA (데스크톱 숨김) */
+  .menu-cta{display:none}
+
+  /* ---- progress dots (right) ---- */
+  .dots{position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:14px}
+  .dots button{width:9px;height:9px;border-radius:50%;border:1px solid var(--muted-2);background:transparent;cursor:pointer;transition:all .2s;padding:0}
+  .dots button.active{background:var(--neon);border-color:var(--neon);box-shadow:0 0 10px var(--neon-soft);transform:scale(1.25)}
+  .dots.on-hero button{border-color:var(--d-muted-2)}
+  .dots.on-hero button.active{background:var(--neon-bright);border-color:var(--neon-bright);box-shadow:0 0 12px var(--neon-bright)}
+
+  /* ===== HERO (p1) = 다크 풀스크린 유지 ===== */
+  #p1{
+    background:var(--d-bg);color:var(--d-ink);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:120px 24px 80px;
+  }
+  #p1 .hero-sub{color:var(--d-muted)}
+  #p1 .hero-sub b{color:var(--d-ink)}
+  #p1 .tk .t{color:var(--d-muted)}
+  #p1 .btn-line{color:var(--d-ink);border-color:var(--d-line-2)}
+  #p1 .btn-line:hover{border-color:var(--neon-bright);color:var(--neon-bright)}
+  #p1 .hero-h1 .glowtxt{color:var(--neon-bright);text-shadow:0 0 30px rgba(57,255,158,.5)}
+  #p1 .kicker{color:var(--neon-bright);border-color:var(--d-line-2);background:rgba(57,255,158,.1)}
+  #p1 .kicker .live{background:var(--neon-bright)}
+  #p1 .tk .n{color:var(--neon-bright)}
+  #p1 .btn-neon{background:var(--neon-bright);color:#000}
+  #p1 .btn-neon:hover{box-shadow:0 12px 36px -10px var(--neon-bright)}
+  #p1 .grid-bg{
+    background-image:linear-gradient(var(--d-line) 1px,transparent 1px),linear-gradient(90deg,var(--d-line) 1px,transparent 1px);
+  }
+  #p1 .glow.g1{background:var(--neon-bright);opacity:.16}
+  #p1 .glow.g2{background:var(--cyan);opacity:.12}
+  #p1 .scroll-hint .mouse::after{background:var(--neon-bright)}
+
+  /* ---------- PANEL 1: HERO ---------- */
+  .kicker{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);font-weight:500;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--neon);border:1px solid var(--line-2);background:var(--neon-soft);padding:8px 16px;border-radius:100px;margin-bottom:34px}
+  .kicker .live{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 0 0 var(--neon);animation:ping 1.8s ease-out infinite}
+  .hero-h1{font-family:var(--display);font-weight:700;font-size:clamp(40px,7.5vw,92px);line-height:.98;letter-spacing:-.035em;margin-bottom:30px}
+  .hero-h1 .l{display:block;opacity:0;transform:translateY(40px);animation:rise .8s cubic-bezier(.2,.7,.2,1) forwards}
+  .hero-h1 .l:nth-child(1){animation-delay:.1s}
+  .hero-h1 .l:nth-child(2){animation-delay:.24s}
+  .hero-h1 .l:nth-child(3){animation-delay:.38s}
+  .hero-h1 .glowtxt{color:var(--neon);text-shadow:0 0 30px rgba(57,255,158,.5)}
+  .hero-sub{font-size:clamp(15px,2vw,19px);color:var(--muted);max-width:560px;margin-bottom:40px;opacity:0;animation:rise .8s ease .56s forwards}
+  .hero-sub b{color:var(--ink);font-weight:600}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:rise .8s ease .7s forwards}
+  .btn-neon{font-family:var(--display);font-weight:600;font-size:16px;padding:16px 30px;border-radius:100px;background:var(--neon);color:#000;cursor:pointer;border:none;transition:all .18s;display:inline-flex;align-items:center;gap:9px}
+  .btn-neon:hover{transform:translateY(-2px);box-shadow:0 12px 36px -10px var(--neon)}
+  .btn-line{font-family:var(--display);font-weight:600;font-size:16px;padding:16px 30px;border-radius:100px;background:transparent;color:var(--ink);border:1px solid var(--line-2);cursor:pointer;transition:all .18s}
+  .btn-line:hover{border-color:var(--neon);color:var(--neon)}
+  .scroll-hint{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted-2);font-family:var(--display);font-size:11px;letter-spacing:.2em}
+  .scroll-hint .mouse{width:22px;height:34px;border:1.5px solid var(--muted-2);border-radius:12px;position:relative}
+  .scroll-hint .mouse::after{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:3px;height:7px;border-radius:2px;background:var(--neon);animation:scrolldot 1.6s ease infinite}
+
+  /* stat ticker under hero */
+  .ticker{display:flex;gap:34px;flex-wrap:wrap;margin-top:46px;opacity:0;animation:rise .8s ease .84s forwards}
+  .tk{display:flex;flex-direction:column}
+  .tk .n{font-family:var(--display);font-weight:700;font-size:30px;color:var(--neon);letter-spacing:-.02em;line-height:1}
+  .tk .t{font-size:12.5px;color:var(--muted);margin-top:6px}
+
+  /* ---------- PANEL 2: PRODUCTS (orbit/grid hybrid) ---------- */
+  .p-label{font-family:var(--display);font-weight:500;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--neon-dim);margin-bottom:16px}
+  .p-title{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,54px);line-height:1.04;letter-spacing:-.03em;margin-bottom:14px;color:var(--ink)}
+  .p-desc{font-size:16px;color:var(--muted);max-width:520px;margin-bottom:44px}
+  .prod-rail{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .pcard{position:relative;border:1px solid var(--line);border-radius:18px;padding:24px 20px;background:var(--bg);overflow:hidden;transition:all .25s;cursor:pointer}
+  .pcard::before{content:"";position:absolute;inset:0;border-radius:18px;padding:1.5px;background:linear-gradient(140deg,transparent,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;transition:background .25s}
+  .pcard:hover{transform:translateY(-6px);box-shadow:0 22px 50px -28px rgba(22,193,114,.4);background:var(--bg)}
+  .pcard:hover::before{background:linear-gradient(140deg,var(--neon),transparent 60%)}
+  .pcard .pi{display:block;margin-bottom:16px;line-height:0;color:var(--neon)}
+  .pcard .pi svg{width:34px;height:34px;display:block}
+  .pcard h4{font-family:var(--display);font-weight:600;font-size:17px;margin-bottom:7px;letter-spacing:-.01em;color:var(--ink)}
+  .pcard p{font-size:13px;color:var(--muted);line-height:1.6}
+  .pcard .idx{position:absolute;top:16px;right:18px;font-family:var(--display);font-size:12px;color:var(--muted-2)}
+
+  /* ---------- PANEL 3: LIFECYCLE (horizontal timeline) ---------- */
+  .life-wrap{position:relative}
+  .life-line{position:absolute;top:64px;left:6%;right:6%;height:2px;background:linear-gradient(90deg,transparent,var(--neon),var(--cyan),transparent);z-index:0}
+  .life-row{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;position:relative;z-index:1}
+  .life-node{text-align:center}
+  .life-node .orb{width:64px;height:64px;border-radius:50%;margin:0 auto 22px;display:grid;place-items:center;font-size:26px;background:var(--bg);border:2px solid var(--neon);box-shadow:0 0 0 6px var(--neon-soft);transition:all .3s}
+  .life-node:hover .orb{box-shadow:0 0 0 9px var(--neon-soft);transform:scale(1.06)}
+  .life-node .ph{font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.16em;color:var(--neon-dim);margin-bottom:6px}
+  .life-node h4{font-family:var(--display);font-weight:600;font-size:23px;margin-bottom:16px;letter-spacing:-.02em;color:var(--ink)}
+  .life-node ul{list-style:none;display:inline-flex;flex-direction:column;gap:9px;text-align:left}
+  .life-node li{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:9px}
+  .life-node li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--neon);flex-shrink:0}
+
+  /* ---------- PANEL 4: WHY (big number split) ---------- */
+  .why-split{display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:center}
+  .why-left h2{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,52px);line-height:1.05;letter-spacing:-.03em;margin-bottom:22px;color:var(--ink)}
+  .why-left h2 .glowtxt{color:var(--neon-dim)}
+  .why-left p{font-size:16px;color:var(--muted);max-width:430px}
+  .why-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .ws{border:1px solid var(--line);border-radius:16px;padding:26px 22px;background:var(--bg-2);transition:all .25s}
+  .ws:hover{border-color:var(--neon);background:var(--bg);box-shadow:0 18px 40px -28px rgba(22,193,114,.4)}
+  .ws .wn{font-family:var(--display);font-weight:700;font-size:38px;color:var(--neon-dim);letter-spacing:-.02em;line-height:1}
+  .ws .wl{font-family:var(--display);font-weight:600;font-size:15px;margin:10px 0 5px;color:var(--ink)}
+  .ws .wd{font-size:12.5px;color:var(--muted)}
+
+  /* ---------- PANEL 5: CONTACT ---------- */
+  .ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+  .ct-left h2{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,54px);line-height:1.04;letter-spacing:-.03em;margin-bottom:18px;color:var(--ink)}
+  .ct-left .glowtxt{color:var(--neon-dim)}
+  .ct-left p{font-size:16px;color:var(--muted);max-width:400px;margin-bottom:30px}
+  .ct-methods{display:flex;flex-direction:column;gap:12px}
+  .ctm{display:flex;align-items:center;gap:15px;padding:17px 20px;border:1px solid var(--line);border-radius:14px;background:var(--bg-2);transition:all .18s;cursor:pointer}
+  .ctm:hover{border-color:var(--neon);transform:translateX(4px);box-shadow:0 14px 30px -22px rgba(22,193,114,.5)}
+  .ctm .ci{width:44px;height:44px;border-radius:12px;background:var(--neon);color:#fff;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .ctm .cl{font-size:12px;color:var(--muted)}
+  .ctm .cv{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink)}
+
+  .formbox{border:1px solid var(--line);border-radius:22px;padding:34px;background:var(--bg-2);position:relative;overflow:hidden;box-shadow:0 30px 60px -40px rgba(12,14,20,.3)}
+  .formbox::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--neon),var(--cyan))}
+  .formbox h3{font-family:var(--display);font-weight:600;font-size:21px;margin-bottom:5px;color:var(--ink)}
+  .formbox .fs{font-size:13px;color:var(--muted);margin-bottom:24px}
+  .fld{margin-bottom:17px}
+  .fld label{display:block;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px}
+  .fld input{width:100%;font-family:var(--body);font-size:15px;color:var(--ink);padding:14px 16px;border:1px solid var(--line-2);border-radius:12px;background:var(--bg);transition:all .15s}
+  .fld input::placeholder{color:var(--muted-2)}
+  .fld input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 0 3px var(--neon-soft)}
+  .nchips{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .nchip{font-size:11.5px;font-weight:500;cursor:pointer;padding:11px 4px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg);color:var(--muted);transition:all .15s;user-select:none;text-align:center;white-space:nowrap}
+  .nchip:hover{border-color:var(--neon);color:var(--ink)}
+  .nchip.on{background:var(--neon);color:#fff;border-color:var(--neon);font-weight:600}
+  .nsubmit{width:100%;font-family:var(--display);font-weight:600;font-size:16px;padding:17px;border:none;border-radius:13px;background:var(--neon);color:#fff;cursor:pointer;margin-top:8px;transition:all .15s}
+  .nsubmit:hover{box-shadow:0 14px 34px -12px var(--neon);transform:translateY(-1px)}
+  .fnote{font-size:11.5px;color:var(--muted-2);text-align:center;margin-top:13px}
+
+  /* footer mini inside last panel */
+  .mini-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted-2);z-index:2}
+
+  /* 패널 배경 교차 (흰색 / 연회색) */
+  #p3,#p5{background:var(--bg-2)}
+
+  /* 한 줄 푸터 */
+  .one-foot{background:var(--ink);color:var(--muted-2);text-align:center;padding:22px 24px;font-size:12.5px;line-height:1.6}
+  .one-foot b{color:var(--neon-bright);font-weight:600}
+  .one-foot a{color:var(--muted-2)}
+
+  /* mobile sticky */
+  .mbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:200;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:9px 12px;gap:8px}
+  .mbar a{flex:1;text-align:center;font-family:var(--display);font-weight:600;font-size:14px;padding:13px 0;border-radius:12px}
+  .mb1{background:var(--neon);color:#fff}
+  .mb3{background:var(--bg-3);color:var(--ink);border:1px solid var(--line)}
+
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(57,255,158,.6)}70%{box-shadow:0 0 0 9px rgba(57,255,158,0)}100%{box-shadow:0 0 0 0 rgba(57,255,158,0)}}
+  @keyframes scrolldot{0%{opacity:1;top:6px}70%{opacity:0;top:16px}100%{opacity:0;top:6px}}
+
+  /* reveal */
+  .rv{opacity:0;transform:translateY(34px);transition:opacity .7s ease,transform .7s ease}
+  .rv.in{opacity:1;transform:none}
+  .rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}.rv.d4{transition-delay:.32s}
+
+  @media(max-width:920px){
+    .prod-rail{grid-template-columns:repeat(2,1fr)}
+    .life-row{grid-template-columns:1fr;gap:34px}
+    .life-line{display:none}
+    .why-split{grid-template-columns:1fr;gap:34px}
+    .ct-grid{grid-template-columns:1fr;gap:34px}
+    .dots{display:none}
+    /* 상단바 정리: 로고 + 아이콘전화 + 햄버거만 */
+    .topbar{padding:14px 18px}
+    .top-cta{gap:10px}
+    .top-phone{display:none}
+    .top-btn{display:none}
+    .top-call-icon{display:flex}
+    .menu-toggle{display:flex}
+    /* 메뉴를 햄버거 드롭다운으로 */
+    .top-menu{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;
+      background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 14px 30px -20px rgba(0,0,0,.3);
+      max-height:0;overflow:hidden;transition:max-height .3s ease}
+    .top-menu.open{max-height:400px}
+    .top-menu a{padding:15px 22px;border-bottom:1px solid var(--line);color:var(--ink-2);font-size:15.5px}
+    .top-menu .menu-cta{display:block;background:var(--neon);color:#fff;font-weight:600;text-align:center;border-bottom:none}
+    .topbar.on-hero .top-menu{background:var(--d-bg-2);border-bottom-color:var(--d-line)}
+    .topbar.on-hero .top-menu a{color:var(--d-ink);border-bottom-color:var(--d-line)}
+    .topbar.on-hero .top-menu .menu-cta{color:#fff}
+  }
+  @media(max-width:600px){
+    .panel{padding:72px 18px 56px}
+    #p1{padding:96px 18px 64px}
+    .why-stats{grid-template-columns:1fr 1fr}
+    .ticker{gap:22px}
+    .tk .n{font-size:24px}
+    .nchips{grid-template-columns:repeat(2,1fr)}
+    .mbar{display:flex}
+    body{padding-bottom:62px}
+    .scroll-hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="#" class="logo"><span class="mark">S</span>세이브샵<small>SAVESHOP</small></a>
+  <nav class="top-menu" id="topMenu">
+    <a href="/card-terminal">카드단말기</a>
+    <a href="javascript:void(0)" onclick="comingSoon('인터넷·가전')">인터넷·가전<span class="soon">준비중</span></a>
+    <a href="javascript:void(0)" onclick="comingSoon('스마트자판기')">스마트자판기<span class="soon">준비중</span></a>
+    <a href="/demolition">철거·원상복구</a>
+    <a href="#p5" class="menu-cta">무료 상담 신청</a>
+  </nav>
+  <div class="top-cta">
+    <a href="tel:010-4668-4942" class="top-phone">☎ 010-4668-4942</a>
+    <a href="#p5" class="top-btn">무료 상담</a>
+    <a href="tel:010-4668-4942" class="top-call-icon" aria-label="전화 걸기">☎</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
+  </div>
+</div>
+
+<!-- PROGRESS DOTS -->
+<div class="dots" id="dots">
+  <button data-go="p1" class="active" aria-label="홈"></button>
+  <button data-go="p2" aria-label="제품"></button>
+  <button data-go="p3" aria-label="오픈~폐업"></button>
+  <button data-go="p4" aria-label="강점"></button>
+  <button data-go="p5" aria-label="상담"></button>
+</div>
+
+<div class="scroller" id="scroller">
+
+  <!-- PANEL 1: HERO -->
+  <section class="panel" id="p1">
+    <div class="glow g1"></div><div class="glow g2"></div><div class="grid-bg"></div>
+    <div class="inner">
+      <span class="kicker"><span class="live"></span>전국 17개 시·도 · 지금 상담 가능</span>
+      <h1 class="hero-h1">
+        <span class="l">가게 열 때도,</span>
+        <span class="l">닫을 때도 —</span>
+        <span class="l"><span class="glowtxt">전화 한 통</span>이면 끝.</span>
+      </h1>
+      <p class="hero-sub"><b>설치비 0원.</b> <span style="white-space:nowrap">카드단말기·포스기·키오스크·스마트자판기</span>부터 <span style="white-space:nowrap">가전렌탈·인터넷·철거·원상복구까지.</span> <span style="white-space:nowrap">소상공인을 위한 매장에</span> 필요한 모든 걸 진행합니다.</p>
+      <div class="hero-cta">
+        <a href="tel:010-4668-4942" class="btn-neon">☎ 010-4668-4942</a>
+        <a href="#p5" class="btn-line">간편 상담 신청 →</a>
+      </div>
+      <div class="ticker">
+        <div class="tk"><span class="n">0원</span><span class="t">단말기 설치비</span></div>
+        <div class="tk"><span class="n">한 통</span><span class="t">전화로 전부 접수</span></div>
+        <div class="tk"><span class="n">8종</span><span class="t">통합 서비스</span></div>
+        <div class="tk"><span class="n">17개</span><span class="t">시·도 출장</span></div>
+      </div>
+    </div>
+    <a href="#p2" class="scroll-hint"><span class="mouse"></span>SCROLL</a>
+  </section>
+
+  <!-- PANEL 2: PRODUCTS -->
+  <section class="panel" id="p2">
+    <div class="glow g2" style="top:-140px;left:auto;right:-100px;background:var(--cyan)"></div><div class="grid-bg"></div>
+    <div class="inner">
+      <div class="p-label rv">PRODUCTS & SERVICES</div>
+      <h2 class="p-title rv d1">매장에 필요한 모든 것,<br><span class="glowtxt" style="color:var(--neon-dim)">한 곳에서.</span></h2>
+      <p class="p-desc rv d2"><span style="white-space:nowrap">여러 업체 따로 연락할 필요없이,</span> <span style="white-space:nowrap">세이브샵 전화 한 통화로 신청하세요.</span></p>
+      <div class="prod-rail">
+        <div class="pcard rv d1"><span class="idx">01</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg></span><h4>카드단말기</h4><p>유선·무선·블루투스·토스. 수수료 비교 후 최적 조건.</p></div>
+        <div class="pcard rv d1"><span class="idx">02</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="11" rx="1.5"/><line x1="3" y1="19" x2="21" y2="19"/><line x1="8" y1="15" x2="8" y2="19"/><line x1="16" y1="15" x2="16" y2="19"/></svg></span><h4>포스기</h4><p>주문·결제·매출 통합 관리. 업종별 맞춤 세팅.</p></div>
+        <div class="pcard rv d2"><span class="idx">03</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="16" rx="1.5"/><line x1="9" y1="14" x2="15" y2="14"/><line x1="10" y1="22" x2="14" y2="22"/><line x1="12" y1="18" x2="12" y2="22"/></svg></span><h4>키오스크</h4><p>무인 주문·결제로 인건비 절감. 미니까지.</p></div>
+        <div class="pcard rv d2"><span class="idx">04</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="6" x2="15" y2="6"/><circle cx="12" cy="13" r="2.5"/></svg></span><h4>테이블오더</h4><p>QR·태블릿 셀프 주문. 회전율·객단가 상승.</p></div>
+        <div class="pcard rv d1"><span class="idx">05</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="8" x2="19" y2="8"/><rect x="8" y="11" width="3" height="3"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg></span><h4>스마트 자판기</h4><p>무인 결제 밴딩머신. 24시간 추가 수익원.</p></div>
+        <div class="pcard rv d2"><span class="idx">06</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="6" y1="7" x2="18" y2="7"/><path d="M12 10 v3"/><path d="M10 16 h4 v1 a2 2 0 0 1 -4 0 z"/></svg></span><h4>가전 렌탈</h4><p>정수기·냉난방기 등 매장 가전 렌탈.</p></div>
+        <div class="pcard rv d3"><span class="idx">07</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="3.5" y1="9" x2="20.5" y2="9"/><line x1="3.5" y1="15" x2="20.5" y2="15"/><path d="M12 3 a13 13 0 0 0 0 18 a13 13 0 0 0 0 -18"/></svg></span><h4>인터넷 개통</h4><p>통신 3사 비교. 결합 할인으로 절감.</p></div>
+        <div class="pcard rv d4"><span class="idx">08</span><span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21 L10 14"/><path d="M9 13 l2 2"/><path d="M13 3 l-4 4 l4 4 l4 -4 z"/><path d="M14 8 l5 5"/></svg></span><h4>철거·원상복구</h4><p>폐업·이전 시 철거부터 원상복구까지.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL 3: LIFECYCLE -->
+  <section class="panel" id="p3">
+    <div class="glow g1" style="background:var(--neon)"></div><div class="grid-bg"></div>
+    <div class="inner">
+      <div class="p-label rv" style="text-align:center">OPEN → CLOSE</div>
+      <h2 class="p-title rv d1" style="text-align:center;margin-bottom:8px"><span style="white-space:nowrap">매장 오픈부터 필요한 모든 것,</span> <span class="glowtxt" style="color:var(--neon-dim);white-space:nowrap">전화 한 통화로.</span></h2>
+      <p class="p-desc rv d2" style="text-align:center;margin:0 auto 56px;max-width:560px"><span style="white-space:nowrap">결제기부터 가전렌탈, 인터넷 등</span> <span style="white-space:nowrap">필요한 모든 것부터 폐업 시 철거까지.</span> <span style="white-space:nowrap">편하게 문의주세요.</span></p>
+      <div class="life-wrap">
+        <div class="life-line"></div>
+        <div class="life-row">
+          <div class="life-node rv d1">
+            <div class="orb">🏗️</div>
+            <div class="ph">PHASE 01</div>
+            <h4>가게 열 때</h4>
+            <ul><li>카드단말기·포스기</li><li>키오스크·테이블오더</li><li>인터넷·가전 렌탈</li><li>스마트 자판기</li></ul>
+          </div>
+          <div class="life-node rv d2">
+            <div class="orb">🏪</div>
+            <div class="ph">PHASE 02</div>
+            <h4>운영하는 동안</h4>
+            <ul><li>장비 관리</li><li>빠른 A/S · 원격지원</li></ul>
+          </div>
+          <div class="life-node rv d3">
+            <div class="orb">📦</div>
+            <div class="ph">PHASE 03</div>
+            <h4>가게 닫을 때</h4>
+            <ul><li>상가 철거·원상복구</li><li>희망리턴패키지 안내</li><li>현장 정리·마무리</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL 4: WHY -->
+  <section class="panel" id="p4">
+    <div class="glow g2"></div><div class="grid-bg"></div>
+    <div class="inner">
+      <div class="why-split">
+        <div class="why-left">
+          <div class="p-label rv">WHY SAVESHOP</div>
+          <h2 class="rv d1">단순히 장비만 파는 곳이<br><span class="glowtxt">아닙니다.</span></h2>
+          <p class="rv d2"><span style="white-space:nowrap">문의부터 설치·관리·A/S,</span> <span style="white-space:nowrap">그리고 폐업 정리까지.</span> <span style="white-space:nowrap">전화 한 통화로 편하게</span> 접수하시고 상담 받아보세요.</p>
+        </div>
+        <div class="why-stats">
+          <div class="ws rv d1"><div class="wn">전담</div><div class="wl">단말기 매니저</div><div class="wd">설치부터 관리까지 직접</div></div>
+          <div class="ws rv d2"><div class="wn">0원</div><div class="wl">설치·관리비</div><div class="wd">숨은 비용 없이 투명하게</div></div>
+          <div class="ws rv d3"><div class="wn">8종</div><div class="wl">원스톱 통합</div><div class="wd">결제부터 철거까지 한 번에</div></div>
+          <div class="ws rv d4"><div class="wn">17개</div><div class="wl">시·도 출장</div><div class="wd">전국 어디든 직접 방문</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL 5: CONTACT -->
+  <section class="panel" id="p5">
+    <div class="glow g1" style="background:var(--neon)"></div><div class="glow g2"></div><div class="grid-bg"></div>
+    <div class="inner">
+      <div class="ct-grid">
+        <div class="ct-left">
+          <div class="p-label rv">GET STARTED</div>
+          <h2 class="rv d1">1분이면<br><span class="glowtxt">상담 신청 완료.</span></h2>
+          <p class="rv d2">이름과 연락처만 남겨주시면, 순차적으로 연락 드리겠습니다.</p>
+          <div class="ct-methods rv d3">
+            <a href="tel:010-4668-4942" class="ctm">
+              <span class="ci">☎</span>
+              <span><span class="cl">전화 상담</span><br><span class="cv">010-4668-4942</span></span>
+            </a>
+            <a href="javascript:void(0)" onclick="smsContact()" class="ctm">
+              <span class="ci">✉</span>
+              <span><span class="cl">문자 상담 (24시간 접수)</span><br><span class="cv">문자로 문의하기</span></span>
+            </a>
+          </div>
+        </div>
+        <div class="formbox rv d2">
+          <h3>간편 상담 신청</h3>
+          <p class="fs">문의 주시면 확인 후 순차적으로 연락 드리겠습니다.</p>
+          <div class="fld"><label for="name">성함</label><input id="name" type="text" placeholder="예: 김사장"></div>
+          <div class="fld"><label for="phone">연락처</label><input id="phone" type="tel" placeholder="010-0000-0000"></div>
+          <div class="fld">
+            <label>관심 품목 <span style="font-weight:400;color:var(--muted-2)">(복수 선택)</span></label>
+            <div class="nchips" id="chips">
+              <span class="nchip" onclick="toggleChip(this)">유무선 카드단말기</span>
+              <span class="nchip" onclick="toggleChip(this)">포스기</span>
+              <span class="nchip" onclick="toggleChip(this)">키오스크</span>
+              <span class="nchip" onclick="toggleChip(this)">테이블오더</span>
+              <span class="nchip" onclick="toggleChip(this)">인터넷</span>
+              <span class="nchip" onclick="toggleChip(this)">가전렌탈</span>
+              <span class="nchip" onclick="toggleChip(this)">스마트자판기</span>
+              <span class="nchip" onclick="toggleChip(this)">철거·원상복구</span>
+            </div>
+          </div>
+          <button class="nsubmit" onclick="submitForm()">상담 신청하기</button>
+          <p class="fnote">상담 신청 시 개인정보 수집·이용에 동의하는 것으로 간주됩니다. 입력하신 정보는 상담 목적으로만 사용됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- 한 줄 푸터 -->
+<footer class="one-foot">
+  © 2026 <b>세이브샵 (SAVESHOP)</b> · thesaveshop.com · 상담 <a href="tel:010-4668-4942">010-4668-4942</a>
+</footer>
+
+<!-- mobile bar -->
+<div class="mbar">
+  <a href="tel:010-4668-4942" class="mb1">☎ 전화 상담</a>
+  <a href="#p5" class="mb3">상담 신청</a>
+</div>
+
+<script>
+  var panels=['p1','p2','p3','p4','p5'].map(function(id){return document.getElementById(id);});
+  var dots=document.querySelectorAll('#dots button');
+  var topbar=document.querySelector('.topbar');
+  var dotbox=document.getElementById('dots');
+
+  // dot navigation
+  dots.forEach(function(d){
+    d.addEventListener('click',function(){
+      var t=document.getElementById(d.getAttribute('data-go'));
+      if(t)t.scrollIntoView({behavior:'smooth'});
+    });
+  });
+
+  // active dot + reveal (viewport root, 일반 스크롤)
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.querySelectorAll('.rv').forEach(function(el){el.classList.add('in');});
+        var idx=panels.indexOf(e.target);
+        if(idx>=0){dots.forEach(function(d,i){d.classList.toggle('active',i===idx);});}
+      }
+    });
+  },{threshold:.35});
+  panels.forEach(function(p){io.observe(p);});
+
+  // 히어로(다크) 위에 있을 때 상단바/도트 색 전환
+  var heroIO=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      var onHero=e.isIntersecting && e.intersectionRatio>.45;
+      topbar.classList.toggle('on-hero',onHero);
+      dotbox.classList.toggle('on-hero',onHero);
+    });
+  },{threshold:[.45]});
+  heroIO.observe(document.getElementById('p1'));
+
+  // smooth anchor
+  document.querySelectorAll('a[href^="#p"]').forEach(function(a){
+    a.addEventListener('click',function(ev){
+      ev.preventDefault();
+      var t=document.getElementById(a.getAttribute('href').slice(1));
+      if(t)t.scrollIntoView({behavior:'smooth'});
+    });
+  });
+
+  function toggleChip(el){el.classList.toggle('on');}
+
+  // 모바일 햄버거 메뉴 토글
+  var menuToggle=document.getElementById('menuToggle');
+  var topMenu=document.getElementById('topMenu');
+  if(menuToggle){
+    menuToggle.addEventListener('click',function(){
+      topMenu.classList.toggle('open');
+      menuToggle.classList.toggle('open');
+    });
+    topMenu.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click',function(){
+        topMenu.classList.remove('open');
+        menuToggle.classList.remove('open');
+      });
+    });
+  }
+  function smsContact(){
+    var phone='010-4668-4942';
+    var isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if(isMobile){window.location.href='sms:'+phone;}
+    else{
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(phone).then(function(){
+          alert('PC에서는 문자 앱 연결이 어려워요.\n\n전화번호 '+phone+' 가 복사되었습니다.\n휴대폰으로 문자를 보내시거나, 간편 상담 폼을 이용해 주세요.');
+          document.getElementById('p5').scrollIntoView({behavior:'smooth'});
+        });
+      } else {
+        alert('PC에서는 문자 앱 연결이 어려워요.\n\n문자: '+phone+'\n간편 상담 폼을 이용해 주세요.');
+        document.getElementById('p5').scrollIntoView({behavior:'smooth'});
+      }
+    }
+  }
+  // ===== 상담 폼 전송 설정 =====
+  // 배포 후 구글 앱스 스크립트 웹앱 URL을 아래에 붙여넣으면 자동으로 스프레드시트 저장+이메일 발송됩니다.
+  // 비워두면 데모 모드(알림창만)로 동작합니다.
+  var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
+
+  function comingSoon(name){
+    alert(name + ' 페이지는 현재 준비 중입니다.\n빠르게 찾아뵙겠습니다. 문의는 전화 또는 상담 신청을 이용해 주세요.');
+  }
+
+  function submitForm(){
+    var name=document.getElementById('name').value.trim();
+    var phone=document.getElementById('phone').value.trim();
+    if(!name||!phone){alert('성함과 연락처를 입력해 주세요.');return;}
+    // 선택된 관심품목 수집
+    var items=[];
+    document.querySelectorAll('#chips .nchip.on').forEach(function(c){items.push(c.textContent.trim());});
+    var btn=document.querySelector('.nsubmit');
+
+    // 엔드포인트 미설정 시 데모 모드
+    if(!SHEET_ENDPOINT){
+      alert(name+'님, 상담 신청이 접수되었습니다.\n순차적으로 연락드리겠습니다. 감사합니다.\n\n(현재 데모 모드입니다. 배포 후 스프레드시트 연결이 완료되면 실제 접수됩니다.)');
+      return;
+    }
+
+    // 실제 전송
+    btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
+    var data={
+      name:name,
+      phone:phone,
+      items:items.join(', '),
+      time:new Date().toLocaleString('ko-KR')
+    };
+    fetch(SHEET_ENDPOINT,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(data)
+    })
+      .then(function(){
+        alert(name+'님, 상담 신청이 접수되었습니다.\n순차적으로 연락드리겠습니다. 감사합니다.');
+        document.getElementById('name').value='';
+        document.getElementById('phone').value='';
+        document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});
+      })
+      .catch(function(){
+        alert('일시적인 오류로 접수에 실패했습니다.\n전화('+'010-4668-4942'+')로 문의해 주세요.');
+      })
+      .finally(function(){btn.disabled=false; btn.textContent=orig;});
+  }
+
+  function fakeSubmit(){submitForm();}  // 기존 호출 호환용
+
+  // 첫 패널 즉시 표시 + 시작 시 히어로 위 상태
+  document.getElementById('p1').querySelectorAll('.rv').forEach(function(el){el.classList.add('in');});
+  topbar.classList.add('on-hero');dotbox.classList.add('on-hero');
+</script>
+</body>
+</html>
