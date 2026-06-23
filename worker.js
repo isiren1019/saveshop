@@ -322,7 +322,7 @@ const TEMPLATE = `<!DOCTYPE html>
       <div class="sec-label">{{KW_LABEL}}</div>
       <h2 class="sec-title">{{KW_HEADING}}</h2>
     </div>
-    <div class="region-context rv" style="max-width:820px;margin:0 auto">
+    <div class="region-context rv">
       <p style="font-size:1.05rem;line-height:1.9;color:#333;margin-bottom:1.4em">{{REGION_CONTEXT}}</p>
       {{KW_BODY}}
     </div>
@@ -1147,7 +1147,7 @@ function render(regionName, keywordName) {
       })
       .join("\n");
     typesHtml = `
-    <div class="matrix-wrap rv" style="max-width:900px;margin:2.6em auto 0">
+    <div class="matrix-wrap rv" style="margin:2.6em 0 0">
       <table class="biz-matrix">
         <thead><tr><th>업종</th><th>추천 장비</th><th>이유</th></tr></thead>
         <tbody>${trs}</tbody>
