@@ -538,7 +538,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <!-- PROCESS -->
 <section class="blk" id="process">
   <div class="wrap">
-    <div class="sec-head center rv">
+    <div class="sec-head rv">
       <div class="sec-label">HOW IT WORKS</div>
       <h2 class="sec-title">신청부터 설치까지,<br><span class="hl">전담 매니저가 끝까지.</span></h2>
       <p class="sec-desc"><span style="white-space:nowrap">복잡한 절차 없이,</span> <span style="white-space:nowrap">전화 한 통이면</span> <span style="white-space:nowrap">담당 매니저가</span> <span style="white-space:nowrap">처음부터 끝까지 안내합니다.</span></p>
@@ -569,7 +569,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <!-- CARD SCREENING -->
 <section class="blk" id="screening">
   <div class="wrap">
-    <div class="sec-head center rv">
+    <div class="sec-head rv">
       <div class="sec-label">CARD SCREENING</div>
       <h2 class="sec-title">카드 가맹 심사</h2>
       <p class="sec-desc"><span style="white-space:nowrap">매장 결제 이용을 위해</span> <span style="white-space:nowrap">카드사 가맹 신청 후</span> <span style="white-space:nowrap">승인되어야 정상 결제가 가능합니다.</span> <span style="white-space:nowrap">필요 서류 안내부터</span> <span style="white-space:nowrap">가맹점 등록까지</span> <span style="white-space:nowrap">정확하게 도와드립니다.</span></p>
@@ -597,11 +597,11 @@ const TEMPLATE = `<!DOCTYPE html>
 <!-- FAQ -->
 <section class="blk" id="faq" style="background:#fff">
   <div class="wrap">
-    <div class="sec-head center rv">
+    <div class="sec-head rv">
       <div class="sec-label">FAQ</div>
       <h2 class="sec-title">자주 묻는 질문</h2>
     </div>
-    <div class="faq-list" style="max-width:760px;margin:0 auto">
+    <div class="faq-list" style="max-width:760px">
       {{FAQ_ITEMS}}
     </div>
   </div>
@@ -1114,6 +1114,13 @@ function render(regionName, keywordName) {
 
   let html = TEMPLATE;
 
+  // 지역 페이지는 URL이 /광교/카드단말기 처럼 한 단계 더 들어가 있어서
+  // 상대경로(images/...)가 /광교/images/... 로 잘못 해석됨 → 절대경로(/images/)로 변환.
+  // src="images/  와 JS 내부 "images/  (큰따옴표) 둘 다 처리. 이미 /images/ 인 건 건드리지 않음.
+  html = html
+    .replace(/src="images\//g, 'src="/images/')
+    .replace(/(['"])images\/(products|reviews)\//g, '$1/images/$2/');
+
   // 키워드 본문 문단 → <p> 묶음
   const kwBody = kw.intro.body
     .map((p) => `<p style="font-size:1.02rem;line-height:1.9;color:#333;margin-bottom:1.2em">${p}</p>`)
@@ -1167,7 +1174,7 @@ function render(regionName, keywordName) {
     const head = kw.intro.benefitsHead || {};
     benefitsHtml = `
     <div class="why-block rv">
-      <div class="sec-head center">
+      <div class="sec-head">
         ${head.label ? `<div class="sec-label">${head.label}</div>` : ""}
         ${head.title ? `<h2 class="sec-title">${head.title}</h2>` : ""}
         ${head.desc ? `<p class="sec-desc">${head.desc}</p>` : ""}
