@@ -1304,8 +1304,65 @@ function render(regionName, keywordName) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const pathname = decodeURIComponent(url.pathname);
+
+    // robots.txt — 크롤러 허용 + 사이트맵 위치 안내
+    if (pathname === "/robots.txt") {
+      const body = [
+        "User-agent: *",
+        "Allow: /",
+        "",
+        "Sitemap: https://thesaveshop.com/sitemap.xml",
+      ].join("\n");
+      return new Response(body, {
+        headers: { "content-type": "text/plain;charset=UTF-8" },
+      });
+    }
+
+    // sitemap.xml — 정적 페이지 + 지역×키워드 동적 페이지 자동 생성
+    if (pathname === "/sitemap.xml") {
+      const base = "https://thesaveshop.com";
+      const today = new Date().toISOString().slice(0, 10);
+      const urls = [];
+
+      // 정적 페이지
+      const staticPaths = ["/", "/card-terminal.html", "/demolition.html"];
+      for (const p of staticPaths) {
+        urls.push({ loc: base + p, priority: p === "/" ? "1.0" : "0.8" });
+      }
+
+      // 지역 × 키워드 동적 페이지
+      for (const region of Object.keys(REGIONS)) {
+        for (const keyword of Object.keys(KEYWORDS)) {
+          const loc =
+            base + "/" + encodeURIComponent(region) + "/" + encodeURIComponent(keyword);
+          urls.push({ loc, priority: "0.7" });
+        }
+      }
+
+      const body =
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+        urls
+          .map(
+            (u) =>
+              "  <url>\n" +
+              "    <loc>" + u.loc + "</loc>\n" +
+              "    <lastmod>" + today + "</lastmod>\n" +
+              "    <changefreq>weekly</changefreq>\n" +
+              "    <priority>" + u.priority + "</priority>\n" +
+              "  </url>"
+          )
+          .join("\n") +
+        "\n</urlset>";
+
+      return new Response(body, {
+        headers: { "content-type": "application/xml;charset=UTF-8" },
+      });
+    }
+
     // 한글 URL 디코딩 (/광교/카드단말기)
-    const parts = decodeURIComponent(url.pathname).split("/").filter(Boolean);
+    const parts = pathname.split("/").filter(Boolean);
 
     // 지역/키워드 2단 경로만 동적 생성 대상
     if (parts.length === 2) {
