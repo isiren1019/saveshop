@@ -12,6 +12,31 @@ const TEMPLATE = `<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Favicon -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<link rel="apple-touch-icon" href="/images/favicon-180.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#16c172">
+
+<!-- Open Graph (카톡·페북·검색 공유 썸네일) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="세이브샵 SAVESHOP">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="{{REGION}} 카드단말기·포스기 설치 | 세이브샵">
+<meta property="og:description" content="{{REGION}} 카드단말기·포스기·키오스크·테이블오더 설치비 0원. 전화 한 통이면 끝. 1:1 전담 매니저가 설치부터 A/S까지. 상담 010-4668-4942.">
+<meta property="og:image" content="https://thesaveshop.com/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://thesaveshop.com/{{REGION}}/{{KW_CRUMB}}">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{REGION}} 카드단말기·포스기 설치 | 세이브샵">
+<meta name="twitter:description" content="{{REGION}} 결제장비 설치비 0원. 전화 한 통이면 끝. 상담 010-4668-4942.">
+<meta name="twitter:image" content="https://thesaveshop.com/images/og-image.png">
 <style>
   :root{
     --bg:#ffffff;
