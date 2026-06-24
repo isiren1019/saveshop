@@ -91,6 +91,8 @@
 
   /* ---- 지역별 설치 (p4b) ---- */
   .region-head{max-width:680px;margin-bottom:34px}
+  .region-head h2{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,52px);line-height:1.05;letter-spacing:-.03em;margin-bottom:18px;color:var(--ink)}
+  .region-head h2 .glowtxt{color:var(--neon-dim)}
   .sido-chips{display:flex;flex-wrap:wrap;gap:9px;max-width:860px;margin-bottom:8px}
   .sido-chip{font-family:var(--display);font-size:15px;font-weight:500;padding:10px 18px;border-radius:999px;cursor:pointer;border:1px solid var(--line-2);background:var(--bg);color:var(--ink-2);transition:all .18s;display:inline-flex;align-items:center;gap:6px}
   .sido-chip:hover{border-color:var(--neon);color:var(--neon-dim)}
@@ -480,7 +482,7 @@
     <div class="inner">
       <div class="region-head">
         <div class="p-label rv">LOCAL SERVICE</div>
-        <h2 class="rv d1">내 지역<br><span class="glowtxt">전담 매니저를 찾아보세요.</span></h2>
+        <h2 class="rv d1">내 지역 <span class="glowtxt">전담 매니저</span>를<br>찾아보세요.</h2>
         <p class="rv d2"><span style="white-space:nowrap">우리 동네 상권을 선택하시면,</span> <span style="white-space:nowrap">지역 맞춤 설치 정보를 확인하실 수 있습니다.</span></p>
       </div>
       <div class="sido-chips rv d3" id="sidoChips"></div>
