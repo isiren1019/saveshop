@@ -7,6 +7,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="naver-site-verification" content="c1e0b5fd77819b9ba3c7284bd3ddd5ddb069c5cd" />
 <title>{{REGION}} 카드단말기·포스기 설치 | 세이브샵 - 설치비 0원, 전담 매니저</title>
 <meta name="description" content="{{REGION}} 카드단말기·포스기·유무선단말기·키오스크·테이블오더·토스프론트까지. 설치비·관리비·위약금 0원, 1:1 전담 매니저가 설치부터 카드 가맹 심사·교육·A/S까지 책임집니다. 무료 상담 010-4668-4942.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
