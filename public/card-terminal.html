@@ -65,6 +65,10 @@
     word-break:keep-all;overflow-wrap:break-word;
   }
   a{color:inherit;text-decoration:none}
+  /* 콘텐츠 보호: 이미지 드래그/저장 불편화. 폼 입력란은 선택 허용 */
+  img{-webkit-user-drag:none;user-drag:none;-webkit-user-select:none;user-select:none;pointer-events:none}
+  body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+  input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
   ::selection{background:var(--neon);color:#fff}
   .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
 
@@ -801,6 +805,20 @@
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
   document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
 
+</script>
+<script>
+  // 콘텐츠 보호(우클릭·드래그선택·복사 방지). 폼 입력란은 예외.
+  (function(){
+    function isEditable(t){
+      if(!t) return false;
+      var tag=(t.tagName||'').toUpperCase();
+      return tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t.isContentEditable===true);
+    }
+    document.addEventListener('contextmenu',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+    document.addEventListener('selectstart',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+    document.addEventListener('dragstart',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+    document.addEventListener('copy',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+  })();
 </script>
 </body>
 </html>
