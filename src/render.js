@@ -12,6 +12,17 @@ function render(regionName, keywordName) {
   if (!region) throw new Error("지역 없음: " + regionName);
   if (!kw) throw new Error("키워드 없음: " + keywordName);
 
+  // === 철거 전용 렌더 (다크테마 별도 템플릿) ===
+  // 카드단말기와 디자인이 완전히 달라 별도 템플릿을 통째로 사용.
+  // 치환 지점: {{DEMO_LEAD}}(지역 특성 서두), {{REGION}}(지역명).
+  if (keywordName === "철거") {
+    const lead = region.demolition || "";
+    let dhtml = TEMPLATE_DEMOLITION
+      .split("{{DEMO_LEAD}}").join(lead)
+      .split("{{REGION}}").join(regionName);
+    return dhtml;
+  }
+
   let html = TEMPLATE;
 
   // 지역 페이지는 URL이 /광교/카드단말기 처럼 한 단계 더 들어가 있어서
