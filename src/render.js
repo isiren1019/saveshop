@@ -54,29 +54,36 @@ function render(regionName, keywordName) {
   let typesHtml = "";
   if (kw.intro.matrix && kw.intro.matrix.length) {
     const emphasis = region.emphasis || [];
-    // 기본 매트릭스 + 지역 전용 추가 줄(extraRows) 합치기
-    const baseRows = [...kw.intro.matrix, ...(region.extraRows || [])];
-    // 강조 업종을 앞으로 정렬
-    const rows = baseRows.sort((a, b) => {
+    // 키워드가 extraRows 합치기를 허용할 때만 지역 전용 줄 추가 (철거 등은 차단)
+    const allowExtra = kw.intro.allowExtraRows !== false;
+    const baseRows = allowExtra
+      ? [...kw.intro.matrix, ...(region.extraRows || [])]
+      : [...kw.intro.matrix];
+    // 강조 업종을 앞으로 정렬 (extraRows 미사용 시 강조 정렬도 생략 가능)
+    const rows = allowExtra ? baseRows.sort((a, b) => {
       const ai = emphasis.indexOf(a.biz);
       const bi = emphasis.indexOf(b.biz);
       const aw = ai === -1 ? 999 : ai;
       const bw = bi === -1 ? 999 : bi;
       return aw - bw;
-    });
+    }) : baseRows;
     const trs = rows
       .map((r) => {
-        const hot = emphasis.includes(r.biz);
+        const hot = allowExtra && emphasis.includes(r.biz);
         return `<tr${hot ? ' class="hot"' : ""}><td class="biz">${r.biz}</td><td class="rec">${r.gear}</td><td class="why">${r.why}</td></tr>`;
       })
       .join("\n");
+    const mh = kw.intro.matrixHead || { c1: "업종", c2: "추천 장비", c3: "이유" };
+    const note = kw.intro.matrixNote
+      ? kw.intro.matrixNote.replace(/{{REGION}}/g, regionName)
+      : `※ 그 외 업종도 매장 환경에 맞춰 최적의 장비를 추천해 드립니다. ${regionName} 담당 매니저와 상담으로 확인하세요.`;
     typesHtml = `
     <div class="matrix-wrap rv" style="margin:2.6em 0 0">
       <table class="biz-matrix">
-        <thead><tr><th>업종</th><th>추천 장비</th><th>이유</th></tr></thead>
+        <thead><tr><th>${mh.c1}</th><th>${mh.c2}</th><th>${mh.c3}</th></tr></thead>
         <tbody>${trs}</tbody>
       </table>
-      <p class="matrix-note">※ 그 외 업종도 매장 환경에 맞춰 최적의 장비를 추천해 드립니다. ${regionName} 담당 매니저와 상담으로 확인하세요.</p>
+      <p class="matrix-note">${note}</p>
     </div>`;
   }
 
@@ -124,7 +131,9 @@ function render(regionName, keywordName) {
     kiosk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="1.5"/><rect x="9" y="5" width="6" height="7" rx="1"/><line x1="10" y1="17" x2="14" y2="17"/></svg>',
   };
   let crossSellHtml = "";
-  const liveItems = (CROSS_SELL.items || []).filter((i) => i.live);
+  const liveItems = (CROSS_SELL.items || []).filter(
+    (i) => i.live && i.title.replace(/\s|·/g, "").indexOf(keywordName.replace(/\s|·/g, "")) === -1
+  );
   if (liveItems.length) {
     const cards = liveItems
       .map((it) => {
@@ -155,14 +164,27 @@ function render(regionName, keywordName) {
     `<span class="reg" data-region>${regionName}</span>`
   );
 
+  // 첫 문단(REGION_CONTEXT) 소스: 키워드가 contextField를 지정하면 그 지역 필드 사용
+  // (철거 → region.demolition). 없거나 비면 기존 region.context로 폴백.
+  const ctxField = kw.intro.contextField;
+  const introContext =
+    (ctxField && region[ctxField]) ? region[ctxField] : region.context;
+
+  // 하이어로 칩: 키워드가 heroTags를 지정하면 그걸로, 없으면 카드단말기 기본 4종
+  const defaultTags = ["설치비 0원", "1:1 전담 매니저", "A/S 1년 보장", "전자계약서"];
+  const heroTags = (kw.heroTags || defaultTags)
+    .map((t) => `<span><b>✓</b> ${t}</span>`)
+    .join("\n      ");
+
   // 치환 맵
   const map = {
     "{{REGION}}": regionName,
     "{{HERO_TITLE}}": heroRaw,
+    "{{HERO_TAGS}}": heroTags,
     "{{KW_CRUMB}}": kw.crumb || "카드단말기",
     "{{KW_LABEL}}": kw.intro.label,
     "{{KW_HEADING}}": kw.intro.heading,
-    "{{REGION_CONTEXT}}": region.context,
+    "{{REGION_CONTEXT}}": introContext,
     "{{KW_BODY}}": kwBody,
     "{{KW_TYPES}}": typesHtml,
     "{{KW_BENEFITS}}": benefitsHtml,
@@ -185,6 +207,16 @@ function render(regionName, keywordName) {
     /<!--{{REVIEWS_START}}-->[\s\S]*?<!--{{REVIEWS_END}}-->/,
     ""
   );
+
+  // 키워드별 섹션 노출 제어 (B안). sections에 false면 마커 구간 통째로 제거.
+  // 기본값: 지정 없으면 모두 노출(카드단말기 하위호환).
+  const sections = kw.sections || {};
+  if (sections.products === false) {
+    html = html.replace(/<!--{{PRODUCTS_START}}-->[\s\S]*?<!--{{PRODUCTS_END}}-->/, "");
+  }
+  if (sections.cardflow === false) {
+    html = html.replace(/<!--{{CARDFLOW_START}}-->[\s\S]*?<!--{{CARDFLOW_END}}-->/, "");
+  }
 
   // 나머지 placeholder 치환 (지역 들어간 FAQ 답변도 처리)
   for (const [k, v] of Object.entries(map)) {
@@ -233,6 +265,9 @@ export default {
       // 지역 × 키워드 동적 페이지
       for (const region of Object.keys(REGIONS)) {
         for (const keyword of Object.keys(KEYWORDS)) {
+          // allowRegions가 있는 키워드(철거)는 허용 지역만 사이트맵에 포함
+          const allow = KEYWORDS[keyword].allowRegions;
+          if (allow && !allow.includes(region)) continue;
           const loc =
             base + "/" + encodeURIComponent(region) + "/" + encodeURIComponent(keyword);
           urls.push({ loc, priority: "0.7" });
@@ -267,6 +302,12 @@ export default {
     if (parts.length === 2) {
       const [region, keyword] = parts;
       if (REGIONS[region] && KEYWORDS[keyword]) {
+        // 키워드에 allowRegions(허용 지역 목록)가 있으면, 그 목록에 없는 지역은 생성 안 함.
+        // (예: 철거는 경기 등 지정 지역만. 강원·제주는 목록에 없어 제외됨)
+        const allow = KEYWORDS[keyword].allowRegions;
+        if (allow && !allow.includes(region)) {
+          return env.ASSETS.fetch(request); // 정적 처리(404 또는 /demolition 등)로 넘김
+        }
         const html = render(region, keyword);
         return new Response(html, {
           headers: { "content-type": "text/html;charset=UTF-8" },

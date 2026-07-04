@@ -335,12 +335,7 @@ const TEMPLATE = `<!DOCTYPE html>
       <a href="tel:010-4668-4942" class="btn-neon">☎ 010-4668-4942</a>
       <a href="#contact" class="btn-line">간편 상담 신청 →</a>
     </div>
-    <div class="hero-tags">
-      <span><b>✓</b> 설치비 0원</span>
-      <span><b>✓</b> 1:1 전담 매니저</span>
-      <span><b>✓</b> A/S 1년 보장</span>
-      <span><b>✓</b> 전자계약서</span>
-    </div>
+    <div class="hero-tags">{{HERO_TAGS}}</div>
   </div>
 </header>
 
@@ -360,6 +355,7 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
+<!--{{PRODUCTS_START}}-->
 <!-- PRODUCTS -->
 <section class="blk" id="products">
   <div class="wrap">
@@ -564,6 +560,9 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
+<!--{{PRODUCTS_END}}-->
+
+<!--{{CARDFLOW_START}}-->
 <!-- PROCESS -->
 <section class="blk" id="process">
   <div class="wrap">
@@ -622,6 +621,7 @@ const TEMPLATE = `<!DOCTYPE html>
     </div>
   </div>
 </section>
+<!--{{CARDFLOW_END}}-->
 
 <!-- FAQ -->
 <section class="blk" id="faq" style="background:#fff">
