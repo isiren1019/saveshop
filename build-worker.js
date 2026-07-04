@@ -35,6 +35,10 @@ out += '// 데이터 수정은 src/ 안의 파일에서 하고, "node build-work
 out += '// --- 템플릿 ---\n';
 out += extractBody(path.join(SRC, 'template.js')) + '\n\n';
 
+// 철거 전용 다크테마 템플릿
+out += '// --- 철거 전용 템플릿 (다크테마) ---\n';
+out += extractBody(path.join(SRC, 'template-demolition.js')) + '\n\n';
+
 // 3) 지역 데이터 (시·도별 파일을 순서대로 연결 후 REGIONS로 병합)
 out += '// --- 지역 데이터 (시·도별, src/regions/) ---\n';
 const regionVarNames = [];

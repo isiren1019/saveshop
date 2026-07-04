@@ -848,6 +848,774 @@ const TEMPLATE = `<!DOCTYPE html>
 // 각 지역: 표시이름(한글) + 슬러그 + 시도 + 상권특성(context) + 강조업종(emphasis) + 철거수요(demolition) + 인근(nearby)
 // context/emphasis는 실제 상권 검색 기반 초안 — 지니가 현장 감각으로 다듬을 것.
 
+// --- 철거 전용 템플릿 (다크테마) ---
+// ===== 세이브샵 철거·원상복구 전용 HTML 템플릿 (다크테마) =====
+// build-worker.js가 이 파일을 읽어 worker.js로 합칩니다.
+// 카드단말기와 완전히 다른 디자인이라 별도 템플릿으로 관리합니다.
+// 치환 지점: {{REGION}}(지역명), {{DEMO_LEAD}}(지역 특성 서두 = region.demolition)
+// render.js가 키워드="철거"일 때 이 템플릿을 사용합니다.
+
+const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{REGION}} 철거·원상복구 | 세이브샵 - 무료 방문견적, 철거 지원금 대행</title>
+<meta name="description" content="상가 철거·매장 원상복구 전문. 폐업 점포 철거 지원금(평당 20만원·최대 400만원, 서울 추가 300만원) 신청부터 100% 무료 방문견적, 전국 최저가, 현장 AS 1년 보장까지. 무료 상담 010-4668-4942.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Favicon -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<link rel="apple-touch-icon" href="/images/favicon-180.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#16c172">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="세이브샵 SAVESHOP">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="상가 철거·매장 원상복구 | 세이브샵 - 무료 견적, 철거 지원금 최대 400만원">
+<meta property="og:description" content="상가 철거·매장 원상복구 전문. 폐업 점포 철거 지원금 신청부터 100% 무료 방문견적, 전국 최저가, 현장 AS 1년 보장까지. 상담 010-4668-4942.">
+<meta property="og:image" content="https://thesaveshop.com/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://thesaveshop.com/demolition.html">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="상가 철거·매장 원상복구 | 세이브샵 - 무료 견적, 철거 지원금 최대 400만원">
+<meta name="twitter:description" content="상가 철거·원상복구, 무료 견적·지원금 신청까지. 상담 010-4668-4942.">
+<meta name="twitter:image" content="https://thesaveshop.com/images/og-image.png">
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-2:#f6f8fa;
+    --bg-3:#eef1f5;
+    --ink:#0c0e14;
+    --ink-2:#2a2e3a;
+    --muted:#5b6275;
+    --muted-2:#9aa1b2;
+    --line:rgba(12,14,20,.10);
+    --line-2:rgba(12,14,20,.16);
+    --neon:#16c172;
+    --neon-bright:#39ff9e;
+    --neon-dim:#0fa862;
+    --neon-soft:rgba(22,193,114,.12);
+    --cyan:#0bb6d6;
+    --d-bg:#06070a;
+    --d-bg-2:#0c0e14;
+    --d-bg-3:#121521;
+    --d-ink:#f4f6fb;
+    --d-muted:#8b92a8;
+    --d-muted-2:#5b6178;
+    --d-line:rgba(255,255,255,.09);
+    --d-line-2:rgba(57,255,158,.25);
+    --display:'Space Grotesk',sans-serif;
+    --body:'IBM Plex Sans KR',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body);background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.7;
+    word-break:keep-all;overflow-wrap:break-word;
+  }
+  a{color:inherit;text-decoration:none}
+  /* 콘텐츠 보호: 이미지 드래그/저장 불편화. 폼 입력란은 선택 허용 */
+  img{-webkit-user-drag:none;user-drag:none;-webkit-user-select:none;user-select:none;pointer-events:none}
+  body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+  input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
+  ::selection{background:var(--neon);color:#fff}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+
+  /* ===== TOPBAR (메인과 동일) ===== */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line);transition:all .3s}
+  .topbar.on-hero{background:linear-gradient(180deg,rgba(6,7,10,.85),transparent);border-bottom-color:transparent}
+  .topbar.on-hero .logo{color:var(--d-ink)}
+  .topbar.on-hero .logo small{color:var(--d-muted)}
+  .topbar.on-hero .top-menu a{color:var(--d-muted)}
+  .topbar.on-hero .top-menu a.active{color:var(--neon-bright)}
+  .topbar.on-hero .top-menu a:hover{color:var(--neon-bright)}
+  .topbar.on-hero .top-menu a::after{background:var(--neon-bright)}
+  .topbar.on-hero .soon{color:var(--d-muted);background:rgba(255,255,255,.08);border-color:var(--d-line)}
+  .topbar.on-hero .menu-toggle span{background:var(--d-ink)}
+  .topbar.on-hero .top-phone{color:var(--neon-bright)}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;flex-shrink:0;transition:color .3s}
+  .logo .mark{width:30px;height:30px;border-radius:9px;background:var(--neon);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px}
+  .logo small{font-family:var(--body);font-weight:400;font-size:10px;color:var(--muted);letter-spacing:.12em;margin-left:1px}
+  .top-menu{display:flex;align-items:center;gap:26px;font-family:var(--body);font-weight:500;font-size:14.5px}
+  .top-menu a{color:var(--ink-2);transition:color .15s;position:relative;padding:4px 0}
+  .top-menu a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--neon);transition:width .2s}
+  .top-menu a:hover{color:var(--neon-dim)}
+  .top-menu a:hover::after{width:100%}
+  .top-menu a.active{color:var(--neon-dim);font-weight:600}
+  .top-menu a.active::after{width:100%}
+  .soon{display:inline-block;margin-left:5px;font-size:9.5px;font-weight:600;color:var(--muted-2);background:var(--bg-3);border:1px solid var(--line);padding:1px 5px;border-radius:5px;vertical-align:middle;transform:translateY(-1px)}
+  .top-cta{display:flex;align-items:center;gap:14px}
+  .top-phone{font-family:var(--display);font-weight:600;font-size:15px;color:var(--neon-dim);display:flex;align-items:center;gap:7px}
+  .top-btn{font-family:var(--body);font-weight:600;font-size:13.5px;padding:9px 16px;border-radius:100px;background:var(--neon);color:#fff;transition:all .15s}
+  .top-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px -8px var(--neon)}
+  .top-call-icon{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--neon);color:#fff;font-size:17px;flex-shrink:0}
+  .menu-cta{display:none}
+  .menu-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px}
+  .menu-toggle span{width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s}
+  .menu-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .menu-toggle.open span:nth-child(2){opacity:0}
+  .menu-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+  /* ===== HERO (다크) ===== */
+  .hero{background:var(--d-bg);color:var(--d-ink);position:relative;overflow:hidden;padding:140px 24px 80px}
+  .hero::before{content:"";position:absolute;inset:0;z-index:0;
+    background-image:linear-gradient(var(--d-line) 1px,transparent 1px),linear-gradient(90deg,var(--d-line) 1px,transparent 1px);
+    background-size:60px 60px;-webkit-mask-image:radial-gradient(ellipse 70% 70% at 60% 40%,#000,transparent 80%);mask-image:radial-gradient(ellipse 70% 70% at 60% 40%,#000,transparent 80%);opacity:.6}
+  .hero .glow{position:absolute;border-radius:50%;filter:blur(90px);z-index:0}
+  .hero .g1{width:460px;height:460px;background:var(--neon-bright);top:-150px;right:-110px;opacity:.16}
+  .hero .g2{width:400px;height:400px;background:var(--cyan);bottom:-160px;left:-110px;opacity:.12}
+  .hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:2}
+  .breadcrumb{font-family:var(--display);font-size:13px;letter-spacing:.04em;color:var(--d-muted);margin-bottom:22px}
+  .breadcrumb a{color:var(--d-muted)}
+  .breadcrumb a:hover{color:var(--neon-bright)}
+  .breadcrumb .sep{margin:0 8px;opacity:.5}
+  .breadcrumb .cur{color:var(--neon-bright)}
+  .hero-kicker{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);font-weight:500;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--neon-bright);border:1px solid var(--d-line-2);background:rgba(57,255,158,.1);padding:8px 16px;border-radius:100px;margin-bottom:28px}
+  .hero-kicker .live{width:7px;height:7px;border-radius:50%;background:var(--neon-bright);box-shadow:0 0 0 0 var(--neon-bright);animation:ping 1.8s ease-out infinite}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(36px,6vw,68px);line-height:1.02;letter-spacing:-.03em;margin-bottom:24px}
+  .hero h1 .reg{color:var(--region-color,var(--neon-bright));text-shadow:0 0 30px rgba(57,255,158,.5)}
+  .hero-sub{font-size:clamp(15px,2vw,18px);color:var(--d-muted);max-width:600px;margin-bottom:34px}
+  .hero-sub b{color:var(--d-ink);font-weight:600}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px}
+  .btn-neon{font-family:var(--display);font-weight:600;font-size:16px;padding:15px 28px;border-radius:100px;background:var(--neon-bright);color:#000;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:9px;transition:all .18s}
+  .btn-neon:hover{transform:translateY(-2px);box-shadow:0 12px 36px -10px var(--neon-bright)}
+  .btn-line{font-family:var(--display);font-weight:600;font-size:16px;padding:15px 28px;border-radius:100px;background:transparent;color:var(--d-ink);border:1px solid var(--d-line-2);cursor:pointer;transition:all .18s}
+  .btn-line:hover{border-color:var(--neon-bright);color:var(--neon-bright)}
+  .hero-tags{display:flex;gap:10px;flex-wrap:wrap}
+  .hero-tags span{font-size:13px;color:var(--d-muted);border:1px solid var(--d-line);border-radius:100px;padding:6px 14px}
+  .hero-tags b{color:var(--neon-bright);font-weight:600}
+
+  /* ===== SECTION SHELL ===== */
+  section.blk{padding:80px 0}
+  #intro{background:var(--bg)}
+  #subsidy{background:var(--bg-2)}
+  #why{background:var(--bg)}
+  #process{background:var(--bg-2)}
+  #cases{background:var(--bg)}
+  .sec-head{max-width:680px;margin-bottom:46px}
+  .sec-head.center{margin-left:auto;margin-right:auto;text-align:center}
+  .sec-label{font-family:var(--display);font-weight:500;font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--neon-dim);margin-bottom:14px}
+  .sec-title{font-family:var(--display);font-weight:700;font-size:clamp(27px,4vw,42px);line-height:1.08;letter-spacing:-.025em;color:var(--ink)}
+  .sec-title .hl{color:var(--neon-dim)}
+  .sec-desc{font-size:16px;color:var(--muted);margin-top:14px}
+
+  /* ===== INTRO (폐업 원상복구 소개) ===== */
+  .intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+  .intro-imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative}
+  .intro-imgs .pimg{aspect-ratio:3/4}
+  .intro-imgs .arrow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+    width:40px;height:40px;border-radius:50%;background:var(--neon);color:#fff;display:grid;place-items:center;
+    font-size:20px;box-shadow:0 6px 18px -6px rgba(0,0,0,.4)}
+  .intro-copy .badge{display:inline-block;font-family:var(--display);font-size:12.5px;font-weight:600;letter-spacing:.06em;
+    color:var(--neon-dim);background:var(--neon-soft);padding:5px 14px;border-radius:100px;margin-bottom:16px}
+  .intro-copy h3{font-family:var(--display);font-weight:700;font-size:clamp(22px,3vw,30px);line-height:1.25;letter-spacing:-.02em;color:var(--ink);margin-bottom:16px}
+  .intro-copy p{font-size:15.5px;color:var(--muted);line-height:1.75;margin-bottom:14px}
+  .intro-copy p .hl{color:var(--ink);font-weight:600}
+  .intro-copy .legal{font-size:13.5px;color:var(--muted);background:var(--bg-2);border-left:3px solid var(--neon);border-radius:8px;padding:14px 16px;margin-top:18px;line-height:1.7}
+  .intro-copy .legal b{color:var(--neon-dim)}
+  /* 공용 이미지 박스 */
+  .pimg{width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--bg-3);position:relative;border:1px solid var(--line)}
+  .pimg img{width:100%;height:100%;object-fit:cover;display:block}
+  .pimg .ph-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted-2);font-size:12.5px;text-align:center;padding:10px}
+  .pimg .ph-fallback svg{width:30px;height:30px;opacity:.5}
+
+  /* ===== SUBSIDY (철거 지원금 강조) ===== */
+  .subsidy-card{max-width:760px;margin:0 auto;background:linear-gradient(160deg,var(--d-bg-2),var(--d-bg));color:#fff;
+    border-radius:24px;padding:48px 40px;text-align:center;position:relative;overflow:hidden;border:1px solid var(--d-line-2)}
+  .subsidy-card::before{content:"";position:absolute;inset:0;z-index:0;opacity:.5;
+    background-image:linear-gradient(var(--d-line) 1px,transparent 1px),linear-gradient(90deg,var(--d-line) 1px,transparent 1px);background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 30%,#000,transparent 85%);mask-image:radial-gradient(ellipse 80% 80% at 50% 30%,#000,transparent 85%)}
+  .subsidy-card>*{position:relative;z-index:2}
+  .subsidy-card .stag{display:inline-block;font-family:var(--display);font-size:12.5px;font-weight:600;letter-spacing:.1em;
+    color:var(--neon-bright);border:1px solid var(--d-line-2);background:rgba(57,255,158,.1);padding:6px 16px;border-radius:100px;margin-bottom:22px}
+  .subsidy-card h3{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,40px);letter-spacing:-.02em;line-height:1.1;margin-bottom:8px}
+  .subsidy-card h3 .up{color:var(--neon-bright);text-shadow:0 0 26px rgba(57,255,158,.45)}
+  .subsidy-card .ssub{font-size:14.5px;color:var(--d-muted);margin-bottom:30px}
+  .subsidy-figures{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:26px}
+  .sfig{background:rgba(255,255,255,.04);border:1px solid var(--d-line);border-radius:16px;padding:24px 18px}
+  .sfig .from{font-size:14px;color:var(--d-muted);text-decoration:line-through;text-decoration-color:var(--d-muted-2);margin-bottom:6px}
+  .sfig .to{font-family:var(--display);font-weight:700;font-size:clamp(24px,3.4vw,34px);color:var(--neon-bright);line-height:1.05;letter-spacing:-.01em}
+  .sfig .lbl{font-size:13px;color:var(--d-muted);margin-top:8px}
+  .subsidy-card .snote{font-size:13.5px;color:var(--d-muted);margin-top:4px}
+  .subsidy-card .snote b{color:#fff;font-weight:600}
+  .subsidy-cta{margin-top:30px}
+  .subsidy-cta a{font-family:var(--display);font-weight:700;font-size:clamp(18px,2.4vw,24px);color:#000;background:var(--neon-bright);
+    display:inline-flex;align-items:center;gap:10px;padding:14px 30px;border-radius:100px;transition:all .18s}
+  .subsidy-cta a:hover{transform:translateY(-2px);box-shadow:0 14px 36px -10px var(--neon-bright)}
+  .subsidy-cta .cap{display:block;font-size:12.5px;color:var(--d-muted);margin-top:12px}
+
+  /* ===== WHY (3 strengths) ===== */
+  .why-lead{text-align:center;max-width:620px;margin:0 auto 40px;font-size:16px;color:var(--muted)}
+  .why-lead b{color:var(--neon-dim);font-weight:600}
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .whyc{border:1px solid var(--line);border-radius:16px;padding:28px 24px;background:var(--bg-2);transition:all .2s;text-align:center}
+  .whyc:hover{border-color:var(--neon);background:var(--bg);box-shadow:0 16px 36px -26px rgba(22,193,114,.4)}
+  .whyc .wi{color:var(--neon);margin-bottom:14px;display:flex;justify-content:center}
+  .whyc .wi svg{width:30px;height:30px}
+  .whyc h4{font-family:var(--display);font-weight:600;font-size:17px;color:var(--ink);margin-bottom:8px}
+  .whyc p{font-size:13.5px;color:var(--muted);line-height:1.6}
+  .whyc p b{color:var(--ink);font-weight:600}
+
+  /* ===== PROCESS (진행 절차 7 steps) ===== */
+  .proc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .procc{border:1px solid var(--line);border-radius:16px;padding:24px 20px;background:var(--bg);position:relative;transition:all .2s}
+  .procc:hover{border-color:var(--neon-soft);box-shadow:0 16px 36px -26px rgba(22,193,114,.35)}
+  .procc .pnum{font-family:var(--display);font-weight:700;font-size:13px;color:#fff;background:var(--neon);width:28px;height:28px;border-radius:8px;display:grid;place-items:center;margin-bottom:16px}
+  .procc h4{font-family:var(--display);font-weight:600;font-size:16px;color:var(--ink);margin-bottom:10px;letter-spacing:-.01em}
+  .procc ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .procc li{font-size:12.5px;color:var(--muted);padding-left:13px;position:relative;line-height:1.5}
+  .procc li::before{content:"";position:absolute;left:2px;top:8px;width:4px;height:4px;border-radius:50%;background:var(--neon);flex-shrink:0}
+  .procc.final{background:linear-gradient(160deg,var(--neon-soft),var(--bg));border-color:var(--neon-soft)}
+
+  /* ===== CASES SLIDER (시공 전·후) ===== */
+  .case-slider{position:relative;margin-top:10px}
+  .case-track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:4px 2px 14px;-webkit-overflow-scrolling:touch}
+  .case-track::-webkit-scrollbar{height:6px}
+  .case-track::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px}
+  .case-card{flex:0 0 auto;width:420px;scroll-snap-align:start}
+  /* 단일(합본) 사진 카드 — 합본 사진은 비율이 제각각이라 원본 비율 그대로 표시(잘림 없음) */
+  .case-single{width:480px}
+  .case-single .pimg{aspect-ratio:auto;background:transparent;border:none}
+  .case-single .pimg img{height:auto;object-fit:contain}
+  .case-ba{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+  .case-ba .pimg{aspect-ratio:4/3}
+  .case-ba .ba-arrow{color:var(--neon);font-size:22px;font-weight:700;display:grid;place-items:center}
+  .case-card .cap{font-size:13px;color:var(--muted);margin-top:10px;padding-left:2px}
+  .case-card .cap b{color:var(--ink);font-weight:600}
+  .case-nav{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+  .case-nav button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);cursor:pointer;font-size:18px;display:grid;place-items:center;transition:all .15s}
+  .case-nav button:hover{border-color:var(--neon);color:var(--neon-dim);background:var(--neon-soft)}
+  .case-placeholder{border:1.5px dashed var(--line-2);border-radius:14px;padding:40px 20px;text-align:center;color:var(--muted-2);font-size:14px;line-height:1.7}
+
+  /* ===== CONTACT (메인과 동일 톤) ===== */
+  #contact{background:var(--bg-2);border-top:1px solid var(--line)}
+  .ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+  .ct-left h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.03em;margin-bottom:18px;color:var(--ink)}
+  .ct-left .hl{color:var(--neon-dim)}
+  .ct-left p{font-size:16px;color:var(--muted);max-width:400px;margin-bottom:30px}
+  .ct-methods{display:flex;flex-direction:column;gap:12px}
+  .ctm{display:flex;align-items:center;gap:15px;padding:17px 20px;border:1px solid var(--line);border-radius:14px;background:var(--bg);transition:all .18s;cursor:pointer}
+  .ctm:hover{border-color:var(--neon);transform:translateX(4px)}
+  .ctm .ci{width:44px;height:44px;border-radius:12px;background:var(--neon);color:#fff;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .ctm .cl{font-size:12px;color:var(--muted)}
+  .ctm .cv{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink)}
+  .formbox{border:1px solid var(--line);border-radius:22px;padding:34px;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 30px 60px -40px rgba(12,14,20,.3)}
+  .formbox::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--neon),var(--cyan))}
+  .formbox h3{font-family:var(--display);font-weight:600;font-size:21px;margin-bottom:5px;color:var(--ink)}
+  .formbox .fs{font-size:13px;color:var(--muted);margin-bottom:24px}
+  .fld{margin-bottom:17px}
+  .fld label{display:block;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px}
+  .fld input{width:100%;font-family:var(--body);font-size:15px;color:var(--ink);padding:14px 16px;border:1px solid var(--line-2);border-radius:12px;background:var(--bg);transition:all .15s}
+  .fld input::placeholder{color:var(--muted-2)}
+  .fld input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 0 3px var(--neon-soft)}
+  .nchips{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .nchip{font-size:11.5px;font-weight:500;cursor:pointer;padding:11px 4px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg);color:var(--muted);transition:all .15s;user-select:none;text-align:center;white-space:nowrap}
+  .nchip:hover{border-color:var(--neon);color:var(--ink)}
+  .nchip.on{background:var(--neon);color:#fff;border-color:var(--neon);font-weight:600}
+  .nsubmit{width:100%;font-family:var(--display);font-weight:600;font-size:16px;padding:17px;border:none;border-radius:13px;background:var(--neon);color:#fff;cursor:pointer;margin-top:8px;transition:all .15s}
+  .addr-row{display:flex;gap:7px}
+  .addr-row input{flex:1;cursor:pointer;background:var(--bg)}
+  .addr-btn{flex-shrink:0;font-family:var(--body);font-weight:600;font-size:13.5px;padding:0 18px;border-radius:12px;border:1px solid var(--neon);background:var(--neon-soft);color:var(--neon-dim);cursor:pointer;white-space:nowrap;transition:all .15s}
+  .addr-btn:hover{background:var(--neon);color:#fff}
+  .nsubmit:hover{box-shadow:0 14px 34px -12px var(--neon);transform:translateY(-1px)}
+  .fnote{font-size:11.5px;color:var(--muted-2);text-align:center;margin-top:13px}
+
+  /* ===== FOOTER ===== */
+  .one-foot{background:var(--ink);color:var(--muted-2);text-align:center;padding:22px 24px;font-size:12.5px;line-height:1.6}
+  .one-foot b{color:var(--neon-bright);font-weight:600}
+  .one-foot a{color:var(--muted-2)}
+
+  /* ===== MOBILE BAR ===== */
+  .mbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:200;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:9px 12px;gap:8px}
+  .mbar a{flex:1;text-align:center;font-family:var(--display);font-weight:600;font-size:14px;padding:13px 0;border-radius:12px}
+  .mb1{background:var(--neon);color:#fff}
+  .mb3{background:var(--bg-3);color:var(--ink);border:1px solid var(--line)}
+
+  .rv{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}
+  .rv.in{opacity:1;transform:none}
+
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(57,255,158,.6)}70%{box-shadow:0 0 0 9px rgba(57,255,158,0)}100%{box-shadow:0 0 0 0 rgba(57,255,158,0)}}
+
+  @media(max-width:920px){
+    .topbar{padding:14px 18px}
+    .top-phone,.top-btn{display:none}
+    .top-call-icon{display:flex}
+    .menu-toggle{display:flex}
+    .top-menu{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 14px 30px -20px rgba(0,0,0,.3);max-height:0;overflow:hidden;transition:max-height .3s ease}
+    .top-menu.open{max-height:400px}
+    .top-menu a{padding:15px 22px;border-bottom:1px solid var(--line);font-size:15.5px}
+    .top-menu .menu-cta{display:block;background:var(--neon);color:#fff;font-weight:600;text-align:center;border-bottom:none}
+    .intro-grid{grid-template-columns:1fr;gap:30px}
+    .why-grid{grid-template-columns:1fr}
+    .proc-grid{grid-template-columns:repeat(2,1fr)}
+    .ct-grid{grid-template-columns:1fr;gap:34px}
+    .case-card{width:340px}
+  }
+  @media(max-width:600px){
+    section.blk{padding:56px 0}
+    .hero{padding:104px 18px 64px}
+    .subsidy-card{padding:36px 22px}
+    .subsidy-figures{grid-template-columns:1fr}
+    .proc-grid{grid-template-columns:1fr}
+    .nchips{grid-template-columns:repeat(2,1fr)}
+    /* 사례 카드: 화면 폭에 맞춰 거의 꽉 차게 (양옆 여백만) */
+    .case-card{width:calc(100vw - 64px);max-width:360px}
+    /* 단일(합본) 사진 카드도 화면 폭에 맞춤 (인라인 폭 제거됨) */
+    .case-single{width:calc(100vw - 36px);max-width:420px}
+    /* 전·후 비교를 좌우 → 위아래로 쌓기 (작은 화면에서 사진 비율 보존) */
+    .case-ba{grid-template-columns:1fr;gap:6px}
+    .case-ba .ba-arrow{transform:rotate(90deg);font-size:26px;margin:-2px 0}
+    .mbar{display:flex}
+    body{padding-bottom:62px}
+  }
+
+/* === 신규: DEMOLITION 지역특성 + 철거유형표 + FAQ === */
+#demolition{background:var(--bg)}
+/* 카드단말기 region-context와 동일: 왼쪽 정렬·풀폭 (가운데 정렬 안 함) */
+.demo-context p{font-size:1.05rem;line-height:1.9;color:var(--ink-2);margin:0 0 1.4em;word-break:keep-all}
+.demo-context .demo-lead{font-size:1.08rem;font-weight:500;color:var(--ink);padding-left:16px;border-left:3px solid var(--neon);margin-bottom:1.5em}
+.matrix-wrap{margin-top:2.6em;overflow-x:auto}
+.biz-matrix{width:100%;border-collapse:collapse;min-width:560px;font-family:var(--body)}
+.biz-matrix thead th{background:#111;color:#fff;font-weight:600;font-size:.92rem;padding:14px 18px;text-align:left}
+.biz-matrix thead th:first-child{border-radius:12px 0 0 0}
+.biz-matrix thead th:last-child{border-radius:0 12px 0 0}
+.biz-matrix td{padding:15px 18px;border-bottom:1px solid #eee;font-size:.96rem;color:#333;vertical-align:top}
+.biz-matrix tbody tr:nth-child(even){background:#fafafa}
+.biz-matrix td.biz{font-weight:700;color:#111;white-space:nowrap}
+.biz-matrix td.rec{color:#0c8a55;font-weight:600;white-space:nowrap}
+.biz-matrix td.why{color:#777;font-size:.9rem}
+.matrix-note{text-align:center;font-size:.95rem;color:#555;margin-top:1.3em;line-height:1.7;word-break:keep-all}
+/* FAQ */
+#faq{background:var(--bg-2)}
+.faq-list{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.faq-item{background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.faq-q{width:100%;background:none;border:none;cursor:pointer;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:14px;font-family:var(--body);font-size:1rem;font-weight:600;color:var(--ink);text-align:left}
+.faq-ic{flex:0 0 auto;font-size:1.4rem;color:var(--neon-dim);transition:transform .25s;line-height:1}
+.faq-item.open .faq-ic{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.faq-a p{padding:0 22px 20px;margin:0;font-size:.96rem;line-height:1.85;color:var(--muted);word-break:keep-all}
+@media(max-width:560px){.biz-matrix{font-size:.86rem}.biz-matrix td,.biz-matrix th{padding:12px 12px}}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="/" class="logo"><span class="mark">S</span>세이브샵<small>SAVESHOP</small></a>
+  <nav class="top-menu" id="topMenu">
+    <a href="/card-terminal">카드단말기</a>
+    <a href="javascript:void(0)" onclick="comingSoon('인터넷·가전')">인터넷·가전<span class="soon">준비중</span></a>
+    <a href="javascript:void(0)" onclick="comingSoon('스마트자판기')">스마트자판기<span class="soon">준비중</span></a>
+    <a href="/demolition" class="active">철거·원상복구</a>
+    <a href="#contact" class="menu-cta">무료 상담 신청</a>
+  </nav>
+  <div class="top-cta">
+    <a href="tel:010-4668-4942" class="top-phone">☎ 010-4668-4942</a>
+    <a href="#contact" class="top-btn">무료 상담</a>
+    <a href="tel:010-4668-4942" class="top-call-icon" aria-label="전화 걸기">☎</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
+  </div>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="hero-inner">
+    <nav class="breadcrumb"><a href="/">홈</a><span class="sep">›</span><span class="cur">철거·원상복구</span></nav>
+    <span class="hero-kicker"><span class="live"></span>최저가 · 무료견적 · 지원금 신청</span>
+    <h1><span class="reg" data-region>{{REGION}} 상가 철거</span> · 원상복구<br>전화 한 통으로 끝.</h1>
+    <p class="hero-sub"><b><span style="white-space:nowrap">{{REGION}} 폐업 · 이전 시 철거부터</span> <span style="white-space:nowrap">원상복구 · 폐기물 처리까지.</span></b><br><span style="white-space:nowrap">무료 방문 견적부터 철거 지원금 신청까지,</span> <span style="white-space:nowrap">처음부터 깔끔하게 마무리해 드립니다.</span></p>
+    <div class="hero-cta">
+      <a href="tel:010-4668-4942" class="btn-neon">☎ 010-4668-4942</a>
+      <a href="#contact" class="btn-line">무료 견적 신청 →</a>
+    </div>
+    <div class="hero-tags">
+      <span><b>✓</b> 100% 무료 방문 견적</span>
+      <span><b>✓</b> 전국 최저가</span>
+      <span><b>✓</b> 철거 지원금 대행 신청</span>
+      <span><b>✓</b> 현장 AS 1년 보장</span>
+    </div>
+  </div>
+</header>
+
+<!-- INTRO: 폐업 원상복구 소개 -->
+<!-- DEMOLITION: 지역 특성 + 철거 유형 -->
+<section class="blk" id="demolition">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="sec-label">DEMOLITION</div>
+      <h2 class="sec-title">{{REGION}} 점포 철거·원상복구,<br><span class="hl">현장에 맞게 정확하게.</span></h2>
+    </div>
+    <div class="demo-context rv">
+      <p class="demo-lead">{{DEMO_LEAD}}</p>
+      <p>음식점 주방 철거인지, 사무실 원상복구인지, 간판·전기만 정리하면 되는지에 따라 작업 범위와 비용이 크게 달라집니다. 업종과 평수, 현재 상태를 알려주시면 {{REGION}} 현장에 맞는 방식을 상담해 드립니다.</p>
+      <p>최근에는 임대차 계약상 원상복구 범위를 두고 임대인과 의견이 갈리는 경우가 많아, 철거 전에 복구 범위를 명확히 확인하는 사장님이 늘고 있습니다. {{REGION}}에서도 현장 확인 후 범위를 분명히 정리해 진행합니다.</p>
+    </div>
+    <div class="matrix-wrap rv">
+      <table class="biz-matrix">
+        <thead><tr><th>철거 유형</th><th>작업 범위</th><th>주요 내용</th></tr></thead>
+        <tbody>
+          <tr><td class="biz">음식점·주방 철거</td><td class="rec">주방설비·덕트·바닥</td><td class="why">그리스트랩·배관 정리, 유증기 덕트 해체.</td></tr>
+          <tr><td class="biz">카페·인테리어 철거</td><td class="rec">목공·조명·바닥재</td><td class="why">매립 배선 정리, 바닥 원상복구.</td></tr>
+          <tr><td class="biz">사무실 원상복구</td><td class="rec">파티션·바닥·도장</td><td class="why">임대차 계약상 원상복구 범위 시공.</td></tr>
+          <tr><td class="biz">간판·전기 철거</td><td class="rec">외부 간판·전기설비</td><td class="why">옥외광고물 철거, 전기 안전 마감.</td></tr>
+          <tr><td class="biz">폐업 점포 정리</td><td class="rec">집기·폐기물 일괄</td><td class="why">잔존물·폐기물 처리 포함.</td></tr>
+        </tbody>
+      </table>
+      <p class="matrix-note">※ 그 외 현장도 상황에 맞춰 안내해 드립니다. {{REGION}} 담당자와 상담으로 확인하세요.</p>
+    </div>
+  </div>
+</section>
+
+<section class="blk" id="intro">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="sec-label">RESTORATION</div>
+      <h2 class="sec-title">폐업 매장,<br><span class="hl">철거부터 원상복구까지.</span></h2>
+      <p class="sec-desc"><span style="white-space:nowrap">임대 계약이 종료되면</span> <span style="white-space:nowrap">임차인은 매장을 반드시 원상복구해야 합니다.</span> <span style="white-space:nowrap">세이브샵이 깔끔하게 책임집니다.</span></p>
+    </div>
+    <div class="intro-grid rv">
+      <div class="intro-imgs">
+        <div class="pimg">
+          <img src="/images/demolition/intro-before.jpg" alt="원상복구 전 매장" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="ph-fallback" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>철거 전<br>이미지 준비중</div>
+        </div>
+        <div class="pimg">
+          <img src="/images/demolition/intro-after.jpg" alt="원상복구 후 매장" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="ph-fallback" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>원상복구 후<br>이미지 준비중</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="intro-copy">
+        <span class="badge">소상공인 폐업지원 패키지</span>
+        <h3>철거 비용, 정부 지원금으로<br>부담을 줄이세요.</h3>
+        <p>세이브샵 폐업 원상복구는 소상공인의 철거 공사를 정부지원금 중 하나인 <span class="hl">폐업 점포 철거 지원금</span>으로 진행해 드립니다.</p>
+        <p>철거부터 원상복구까지. 복잡한 절차에 대한 걱정을 덜어드리도록 세이브샵에서 진행을 도와드립니다.</p>
+        <div class="legal">
+          타인의 건물·구조물을 임대해 사용하다 <b>임대가 종료될 시</b>, 임차인은 임차 목적물을 반드시 <b>원상복구</b>해야 합니다. 처음처럼 깨끗한 마무리, 세이브샵이 도와드립니다.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUBSIDY: 상향된 철거 지원금 -->
+<section class="blk" id="subsidy">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <div class="sec-label">SUBSIDY</div>
+      <h2 class="sec-title">상향된 <span class="hl">철거 지원금</span></h2>
+      <p class="sec-desc"><span style="white-space:nowrap">2025년 1월부터 시행된</span> <span style="white-space:nowrap">폐업 점포 철거 지원금,</span> <span style="white-space:nowrap">지원 한도가 크게 올랐습니다.</span></p>
+    </div>
+    <div class="subsidy-card rv">
+      <h3>철거 지원금 <span class="up">최대 400만원</span></h3>
+      <p class="ssub">평당 지원 단가가 상향되어 더 많은 비용을 지원받을 수 있습니다.</p>
+      <div class="subsidy-figures">
+        <div class="sfig">
+          <div class="from">기존 기준</div>
+          <div class="to">평당 20만원</div>
+          <div class="lbl">→ 최대 400만원</div>
+        </div>
+        <div class="sfig">
+          <div class="from">서울 지역</div>
+          <div class="to">추가 300만원</div>
+          <div class="lbl">서울 지역 한정 추가 지원</div>
+        </div>
+      </div>
+      <p class="snote"><b>대상 여부·지원 한도</b>는 매장 위치와 면적에 따라 달라집니다. 전화 주시면 무료로 확인해 드립니다.</p>
+      <div class="subsidy-cta">
+        <a href="tel:010-4668-4942">☎ 철거 문의 010-4668-4942</a>
+        <span class="cap">※ 지원금은 정부 정책에 따라 변동될 수 있으며, 정확한 내용은 상담 시 안내드립니다.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="blk" id="why">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <div class="sec-label">WHY SAVESHOP</div>
+      <h2 class="sec-title"><span style="white-space:nowrap">빠르고 · 정확하고 · 깔끔하게,</span><br><span class="hl" style="white-space:nowrap">믿을 수 있는 원상복구.</span></h2>
+    </div>
+    <p class="why-lead rv">오랜 경험과 노하우로 <b>처음처럼 깨끗한 원상복구</b>를 약속합니다.</p>
+    <div class="why-grid">
+      <div class="whyc rv">
+        <div class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h4>100% 무료 방문 견적</h4>
+        <p><span style="white-space:nowrap">현장을 직접 방문해</span> <span style="white-space:nowrap"><b>무료</b>로 정확하게 견적을 산출합니다.</span></p>
+      </div>
+      <div class="whyc rv">
+        <div class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></div>
+        <h4>전국 최저가</h4>
+        <p><span style="white-space:nowrap">초기 견적 이후 <b>비용 인상 없이</b>,</span> <span style="white-space:nowrap">전국 최저가로 진행합니다.</span></p>
+      </div>
+      <div class="whyc rv">
+        <div class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h4>모든 현장 AS 1년 보장</h4>
+        <p><span style="white-space:nowrap">시공 후에도 <b>1년간 현장 AS</b>를</span> <span style="white-space:nowrap">책임지고 보장합니다.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS: 진행 절차 -->
+<section class="blk" id="process">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <div class="sec-label">HOW IT WORKS</div>
+      <h2 class="sec-title">상담부터 공사 완료까지,<br><span class="hl">진행 절차.</span></h2>
+      <p class="sec-desc"><span style="white-space:nowrap">현장 답사부터 신고·협의,</span> <span style="white-space:nowrap">안전한 해체 작업과 폐기물 처리까지</span> <span style="white-space:nowrap">체계적으로 진행합니다.</span></p>
+    </div>
+    <div class="proc-grid">
+      <div class="procc rv">
+        <div class="pnum">1</div>
+        <h4>전국 무료 상담</h4>
+        <ul><li>고객 상황에 맞는 무료 상담</li><li>희망 리턴 패키지 안내</li></ul>
+      </div>
+      <div class="procc rv">
+        <div class="pnum">2</div>
+        <h4>현장 답사</h4>
+        <ul><li>현장 주변 높이·설비 위치 파악</li><li>주변 여건에 따른 작업 시간·교통 흐름 파악</li></ul>
+      </div>
+      <div class="procc rv">
+        <div class="pnum">3</div>
+        <h4>신고 및 협의</h4>
+        <ul><li>관할구청 단전·단수 신고</li><li>분진방지 살수용 1선 유지</li><li>멸실신고·폐기물 발생 신고</li><li>인근 주민 협의</li></ul>
+      </div>
+      <div class="procc rv">
+        <div class="pnum">4</div>
+        <h4>가설 작업</h4>
+        <ul><li>건물 주변 분진·낙석 방지 방진막·방음판 설치</li></ul>
+      </div>
+      <div class="procc rv">
+        <div class="pnum">5</div>
+        <h4>계획 수립</h4>
+        <ul><li>해체물 종류·규모에 맞는 공법·공정표 작성</li><li>소음·분진·진동·안전 대책 수립</li></ul>
+      </div>
+      <div class="procc rv">
+        <div class="pnum">6</div>
+        <h4>해체 작업</h4>
+        <ul><li>내부·외부 철거</li><li>전기·용접·가스·목공 등 부분 철거</li><li>폐기물 분리·철거재 처리 운반</li><li>비산분진용 살수 직행</li></ul>
+      </div>
+      <div class="procc rv final">
+        <div class="pnum">7</div>
+        <h4>공사 완료 · 검토</h4>
+        <ul><li>철거 폐기물 반출</li><li>혼합·건설 폐기물 분리</li><li>건축물대장 말소 신고</li></ul>
+      </div>
+      <div class="procc rv" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(160deg,var(--d-bg-2),var(--d-bg));border:none">
+        <div style="font-family:var(--display);font-weight:700;font-size:18px;color:var(--neon-bright);line-height:1.3;margin-bottom:10px">처음처럼<br>깔끔하게.</div>
+        <a href="tel:010-4668-4942" style="font-family:var(--display);font-weight:600;font-size:14px;color:#000;background:var(--neon-bright);padding:9px 16px;border-radius:100px">☎ 견적 문의</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASES: 시공 전·후 사례 -->
+
+
+<!-- CONTACT -->
+<!-- FAQ -->
+<section class="blk" id="faq">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <div class="sec-label">FAQ</div>
+      <h2 class="sec-title">자주 묻는 <span class="hl">질문.</span></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item rv">
+        <button class="faq-q" onclick="toggleFaq(this)"><span>철거 비용은 어떻게 정해지나요?</span><span class="faq-ic">+</span></button>
+        <div class="faq-a"><p>업종·평수·철거 범위·폐기물 양에 따라 달라집니다. {{REGION}} 현장을 직접 확인한 뒤 무료로 정찰 견적을 안내드립니다.</p></div>
+      </div>
+      <div class="faq-item rv">
+        <button class="faq-q" onclick="toggleFaq(this)"><span>철거 작업은 얼마나 걸리나요?</span><span class="faq-ic">+</span></button>
+        <div class="faq-a"><p>일반 점포 기준 하루~이틀 내 마무리되는 경우가 많습니다. 규모와 범위에 따라 현장 확인 후 정확한 일정을 안내드립니다.</p></div>
+      </div>
+      <div class="faq-item rv">
+        <button class="faq-q" onclick="toggleFaq(this)"><span>폐기물 처리도 포함되나요?</span><span class="faq-ic">+</span></button>
+        <div class="faq-a"><p>네. 철거 후 발생하는 폐기물 처리와 현장 정리까지 견적에 포함해 진행합니다.</p></div>
+      </div>
+      <div class="faq-item rv">
+        <button class="faq-q" onclick="toggleFaq(this)"><span>임대차 원상복구는 어디까지 해야 하나요?</span><span class="faq-ic">+</span></button>
+        <div class="faq-a"><p>계약서상 원상복구 범위에 따라 다릅니다. 현장과 계약 내용을 함께 확인해 적정 범위를 짚어드리고, 과한 작업 없이 진행합니다.</p></div>
+      </div>
+      <div class="faq-item rv">
+        <button class="faq-q" onclick="toggleFaq(this)"><span>철거 지원금은 누구나 받을 수 있나요?</span><span class="faq-ic">+</span></button>
+        <div class="faq-a"><p>폐업 점포 철거 지원금은 매장 위치·면적 등 조건에 따라 대상 여부가 달라집니다. 전화 주시면 무료로 대상 여부를 확인하고 신청까지 대행해 드립니다.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blk" id="contact">
+  <div class="wrap ct-grid">
+    <div class="ct-left rv">
+      <div class="sec-label">GET STARTED</div>
+      <h2><span data-region>{{REGION}}</span> 어디든<br><span class="hl">전화 한 통이면 끝.</span></h2>
+      <p>이름과 연락처만 남겨주시면, 순차적으로 연락 드리겠습니다. 철거 지원금 대상 여부도 함께 확인해 드립니다.</p>
+      <div class="ct-methods">
+        <a href="tel:010-4668-4942" class="ctm">
+          <span class="ci">☎</span>
+          <span><span class="cl">전화 상담</span><br><span class="cv">010-4668-4942</span></span>
+        </a>
+        <a href="javascript:void(0)" onclick="smsContact()" class="ctm">
+          <span class="ci">✉</span>
+          <span><span class="cl">문자 상담 (24시간 접수)</span><br><span class="cv">문자로 문의하기</span></span>
+        </a>
+      </div>
+    </div>
+    <div class="formbox rv">
+      <h3>무료 견적 신청</h3>
+      <p class="fs">문의 주시면 확인 후 순차적으로 연락 드리겠습니다.</p>
+      <div class="fld"><label for="name">성함</label><input id="name" type="text" placeholder="예: 김사장"></div>
+      <div class="fld"><label for="phone">연락처</label><input id="phone" type="tel" placeholder="010-0000-0000"></div>
+      <div class="fld">
+        <label>관심 항목 <span style="font-weight:400;color:var(--muted-2)">(복수 선택)</span></label>
+        <div class="nchips" id="chips">
+          <span class="nchip" onclick="toggleChip(this)">철거</span>
+          <span class="nchip" onclick="toggleChip(this)">원상복구</span>
+          <span class="nchip" onclick="toggleChip(this)">부분 철거</span>
+        </div>
+      </div>
+      <div class="fld">
+        <label for="addrBase">현장 주소 <span style="font-weight:400;color:var(--muted-2)">(상세주소로 기재 부탁 드립니다.)</span></label>
+        <div class="addr-row">
+          <input id="addrBase" type="text" placeholder="주소 검색 버튼을 눌러주세요" readonly onclick="openPostcode()">
+          <button type="button" class="addr-btn" onclick="openPostcode()">주소 검색</button>
+        </div>
+        <input id="addrDetail" type="text" placeholder="상세주소 (층/호수 등) — 예: 3층 전체" style="margin-top:7px">
+      </div>
+      <button class="nsubmit" onclick="submitForm()">무료 견적 신청하기</button>
+      <p class="fnote">상담 신청 시 개인정보 수집·이용에 동의하는 것으로 간주됩니다. 입력하신 정보는 상담 목적으로만 사용됩니다.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="one-foot">
+  © 2026 <b>세이브샵 (SAVESHOP)</b> · thesaveshop.com · 상담 <a href="tel:010-4668-4942">010-4668-4942</a>
+</footer>
+
+<div class="mbar">
+  <a href="tel:010-4668-4942" class="mb1">☎ 전화 상담</a>
+  <a href="#contact" class="mb3">무료 견적</a>
+</div>
+
+<script>
+  var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
+
+  // 햄버거
+  var menuToggle=document.getElementById('menuToggle');
+  var topMenu=document.getElementById('topMenu');
+  if(menuToggle){
+    menuToggle.addEventListener('click',function(){topMenu.classList.toggle('open');menuToggle.classList.toggle('open');});
+    topMenu.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){topMenu.classList.remove('open');menuToggle.classList.remove('open');});});
+  }
+
+  function comingSoon(name){alert(name+' 페이지는 현재 준비 중입니다.\\n빠르게 찾아뵙겠습니다. 문의는 전화 또는 상담 신청을 이용해 주세요.');}
+  function toggleChip(el){el.classList.toggle('on');}
+
+  // 상단바: 다크 히어로 위에 있을 때 투명+밝은 메뉴 (card-terminal과 동일)
+  (function(){
+    var topbar=document.querySelector('.topbar');
+    var hero=document.querySelector('.hero');
+    if(!topbar||!hero) return;
+    function updateBar(){
+      var rect=hero.getBoundingClientRect();
+      var barH=topbar.offsetHeight||60;
+      var onHero = rect.bottom > barH;
+      topbar.classList.toggle('on-hero', onHero);
+    }
+    updateBar();
+    window.addEventListener('scroll', updateBar, {passive:true});
+    window.addEventListener('resize', updateBar);
+  })();
+
+  function smsContact(){
+    var phone='010-4668-4942';
+    var isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if(isMobile){window.location.href='sms:'+phone;}
+    else{
+      if(navigator.clipboard){navigator.clipboard.writeText(phone).then(function(){alert('PC에서는 문자 앱 연결이 어려워요.\\n\\n전화번호 '+phone+' 가 복사되었습니다.\\n휴대폰으로 문자를 보내시거나, 간편 상담 폼을 이용해 주세요.');document.getElementById('contact').scrollIntoView({behavior:'smooth'});});}
+      else{alert('PC에서는 문자 앱 연결이 어려워요.\\n\\n문자: '+phone);document.getElementById('contact').scrollIntoView({behavior:'smooth'});}
+    }
+  }
+
+  // ===== 카카오(Daum) 우편번호 검색 =====
+  function openPostcode(){
+    new daum.Postcode({
+      oncomplete:function(data){
+        // 도로명 주소 우선, 없으면 지번 주소
+        var base = data.roadAddress || data.jibunAddress;
+        document.getElementById('addrBase').value = base;
+        // 상세주소 칸으로 포커스 이동
+        document.getElementById('addrDetail').focus();
+      }
+    }).open();
+  }
+
+  function submitForm(){
+    var name=document.getElementById('name').value.trim();
+    var phone=document.getElementById('phone').value.trim();
+    var addrBase=document.getElementById('addrBase').value.trim();
+    var addrDetail=document.getElementById('addrDetail').value.trim();
+    var addr=(addrBase+' '+addrDetail).trim();
+    if(!name||!phone){alert('성함과 연락처를 입력해 주세요.');return;}
+    var items=[];
+    document.querySelectorAll('#chips .nchip.on').forEach(function(c){items.push(c.textContent.trim());});
+    var btn=document.querySelector('.nsubmit');
+    var region=(document.querySelector('[data-region]')||{}).textContent||'';
+    if(!SHEET_ENDPOINT){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다.');return;}
+    btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
+    var data={name:name,phone:phone,address:addr,items:'[철거·원상복구] '+items.join(', '),time:new Date().toLocaleString('ko-KR')};
+    fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
+      .then(function(){alert(name+'님, 무료 견적 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.getElementById('addrBase').value='';document.getElementById('addrDetail').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
+      .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
+      .finally(function(){btn.disabled=false;btn.textContent=orig;});
+  }
+
+
+  // 스크롤 리빌
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+
+</script>
+<script>
+  // 콘텐츠 보호(우클릭·드래그선택·복사 방지). 폼 입력란은 예외.
+  (function(){
+    function isEditable(t){
+      if(!t) return false;
+      var tag=(t.tagName||'').toUpperCase();
+      return tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t.isContentEditable===true);
+    }
+    document.addEventListener('contextmenu',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+    document.addEventListener('selectstart',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+    document.addEventListener('dragstart',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+    document.addEventListener('copy',function(e){ if(!isEditable(e.target)) e.preventDefault(); });
+  })();
+
+function toggleFaq(btn){
+  var item = btn.closest('.faq-item');
+  var open = item.classList.contains('open');
+  if(open){ item.classList.remove('open'); item.querySelector('.faq-a').style.maxHeight='0'; }
+  else{ item.classList.add('open'); var a=item.querySelector('.faq-a'); a.style.maxHeight=a.scrollHeight+'px'; }
+}
+
+</script>
+</body>
+</html>
+`;
+
 // --- 지역 데이터 (시·도별, src/regions/) ---
 // ===== 서울 지역 데이터 (6곳) =====
 // build-worker.js가 이 파일을 읽어 worker.js로 합칩니다.
@@ -4430,6 +5198,17 @@ function render(regionName, keywordName) {
   const kw = KEYWORDS[keywordName];
   if (!region) throw new Error("지역 없음: " + regionName);
   if (!kw) throw new Error("키워드 없음: " + keywordName);
+
+  // === 철거 전용 렌더 (다크테마 별도 템플릿) ===
+  // 카드단말기와 디자인이 완전히 달라 별도 템플릿을 통째로 사용.
+  // 치환 지점: {{DEMO_LEAD}}(지역 특성 서두), {{REGION}}(지역명).
+  if (keywordName === "철거") {
+    const lead = region.demolition || "";
+    let dhtml = TEMPLATE_DEMOLITION
+      .split("{{DEMO_LEAD}}").join(lead)
+      .split("{{REGION}}").join(regionName);
+    return dhtml;
+  }
 
   let html = TEMPLATE;
 
