@@ -340,12 +340,7 @@ const TEMPLATE = `<!DOCTYPE html>
       <a href="tel:010-4668-4942" class="btn-neon">☎ 010-4668-4942</a>
       <a href="#contact" class="btn-line">간편 상담 신청 →</a>
     </div>
-    <div class="hero-tags">
-      <span><b>✓</b> 설치비 0원</span>
-      <span><b>✓</b> 1:1 전담 매니저</span>
-      <span><b>✓</b> A/S 1년 보장</span>
-      <span><b>✓</b> 전자계약서</span>
-    </div>
+    <div class="hero-tags">{{HERO_TAGS}}</div>
   </div>
 </header>
 
@@ -365,6 +360,7 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
+<!--{{PRODUCTS_START}}-->
 <!-- PRODUCTS -->
 <section class="blk" id="products">
   <div class="wrap">
@@ -569,6 +565,9 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
+<!--{{PRODUCTS_END}}-->
+
+<!--{{CARDFLOW_START}}-->
 <!-- PROCESS -->
 <section class="blk" id="process">
   <div class="wrap">
@@ -627,6 +626,7 @@ const TEMPLATE = `<!DOCTYPE html>
     </div>
   </div>
 </section>
+<!--{{CARDFLOW_END}}-->
 
 <!-- FAQ -->
 <section class="blk" id="faq" style="background:#fff">
@@ -1008,7 +1008,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가와 대형 복합몰이 많아 입·퇴점 회전이 잦고, 인테리어 교체·원상복구 수요가 함께 발생하는 지역입니다.",
+      "광교는 경기도청·법조타운과 갤러리아 백화점·롯데몰이 자리한 수원의 신흥 중심 상권으로, 광교카페거리와 호수공원 일대를 따라 카페·브런치·음식점이 빽빽하게 들어서 있습니다. 신축 상가 입점과 대형 복합몰을 중심으로 점포 회전이 빨라, 인테리어 교체와 폐업·이전에 따른 철거·원상복구 수요가 꾸준히 함께 발생하는 지역입니다.",
     nearby: ["영통", "수원역", "광교중앙역"],
   },
   "영통": {
@@ -1030,7 +1030,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "대학가·학원가 특성상 점포 교체가 잦아 폐업·이전에 따른 철거와 원상복구 수요가 많은 지역입니다.",
+      "영통은 아주대학교 대학가와 삼성전자 직원 수요를 배경으로 음식점·카페와 대형 학원가가 밀집한 상권입니다. 신동 카페거리를 비롯한 골목 상권에서 젊은 층을 겨냥한 점포가 자주 바뀌어, 폐업·이전에 따른 철거와 원상복구 수요가 활발하게 이어지는 지역입니다.",
     nearby: ["광교", "망포", "영통구청"],
   },
   "동탄1": {
@@ -1052,7 +1052,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "조성 초기 상권의 노후 점포 교체와 대형 상업시설 리모델링이 이어지며 철거·원상복구 수요가 발생하는 지역입니다.",
+      "동탄1신도시는 메타폴리스 남광장·북광장과 나루 상권을 중심으로 학원가와 식당가가 발달한 지역입니다. 조성 시기가 오래된 상권을 중심으로 노후 점포 교체와 대형 상업시설 리모델링이 이어지며, 철거·원상복구 수요가 꾸준히 발생합니다.",
     nearby: ["동탄2", "병점", "영통"],
   },
   "동탄2": {
@@ -1074,7 +1074,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가 입점이 계속되는 지역으로, 신규 인테리어 시공과 기존 점포 원상복구가 함께 발생합니다.",
+      "동탄2신도시는 동탄역 롯데백화점과 호수공원·카페거리를 축으로 빠르게 확장 중인 신도시 상권입니다. 신축 상가 입점이 계속되는 만큼 신규 인테리어 시공과 기존 점포의 원상복구가 함께 발생해, 철거·원상복구 수요가 꾸준한 지역입니다.",
     nearby: ["동탄1", "동탄역", "오산"],
   },
   "분당": {
@@ -1096,7 +1096,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "조성 30년이 넘은 1기 신도시로 노후 점포 리모델링과 업종 교체가 잦아 철거·원상복구 수요가 꾸준한 지역입니다.",
+      "분당은 정자동 카페거리와 서현·수내 먹자골목을 중심으로 1기 신도시 가운데 손꼽히는 소비력을 가진 상권입니다. 조성 30년이 넘어 노후 점포 리모델링과 업종 교체가 잦은 만큼, 인테리어 철거와 임대차 원상복구 수요가 꾸준히 이어지는 지역입니다.",
     nearby: ["판교", "광교", "수내역"],
   },
   "판교": {
@@ -1118,7 +1118,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "오피스 상권 특성상 임차 매장 교체가 잦아 입·퇴점에 따른 철거와 원상복구 수요가 발생하는 지역입니다.",
+      "판교는 테크노밸리 IT 기업과 현대백화점 판교점을 배경으로 객단가 높은 음식점·카페가 자리 잡은 오피스 상권입니다. 오피스 상권 특성상 임차 매장의 입·퇴점이 잦아, 폐업·이전에 따른 철거와 원상복구 수요가 꾸준히 발생하는 지역입니다.",
     nearby: ["분당", "광교", "정자역"],
   },
   "일산": {
@@ -1140,7 +1140,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "대형 스트리트 상권의 점포 교체가 잦고 노후 상가 리모델링이 이어지며 철거·원상복구 수요가 꾸준한 지역입니다.",
+      "일산은 라페스타·웨스턴돔 등 대형 스트리트 상권과 호수공원 일대를 중심으로 외식·쇼핑 수요가 모이는 1기 신도시 상권입니다. 대형 상권의 점포 교체가 잦고 노후 상가 리모델링이 이어지며, 철거·원상복구 수요가 꾸준한 지역입니다.",
     nearby: ["대화역", "주엽", "화정"],
   },
   "평촌": {
@@ -1162,7 +1162,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "학원가·먹자골목 특성상 점포 교체가 잦아 폐업·이전에 따른 철거와 원상복구 수요가 많은 지역입니다.",
+      "평촌은 전국에서 손꼽히는 대형 학원가와 범계 로데오·먹자골목을 중심으로 유동 인구가 많은 상권입니다. 학생·직장인 수요가 겹쳐 음식점·분식·카페의 개업과 교체가 활발한 만큼, 폐업·이전에 따른 철거와 원상복구 수요가 많은 지역입니다.",
     nearby: ["범계역", "인덕원", "산본"],
   },
   "중동": {
@@ -1184,7 +1184,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "백화점·상업시설이 밀집한 도심 상권으로 점포 교체와 인테리어 리모델링에 따른 철거·원상복구 수요가 발생합니다.",
+      "부천 중동은 신중동역 일대와 현대백화점·롯데백화점이 모인 부천의 핵심 상권입니다. 백화점·상업시설이 밀집한 도심 특성상 점포 교체와 인테리어 리모델링이 잦아, 철거·원상복구 수요가 꾸준히 발생하는 지역입니다.",
     nearby: ["상동", "부천역", "송내"],
   },
   "별내": {
@@ -1206,7 +1206,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가 입점이 계속되는 신도시로, 신규 인테리어 시공과 기존 점포 원상복구가 함께 발생합니다.",
+      "별내신도시는 별내역과 이마트를 중심으로 조성된 주거 밀집형 신도시 상권입니다. 신규 상가 입점이 이어지는 만큼 새 매장의 인테리어 시공과 기존 점포의 원상복구가 함께 발생해, 철거·원상복구 수요가 꾸준한 지역입니다.",
     nearby: ["다산", "별내역", "퇴계원"],
   },
   "다산": {
@@ -1228,7 +1228,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가 입점이 이어지는 신도시로, 신규 인테리어 시공과 기존 점포 원상복구가 함께 발생합니다.",
+      "다산신도시는 다산진건·지금지구를 중심으로 빠르게 확장된 신도시 상권입니다. 카페·가족 단위 음식점과 학원의 신규 개업이 활발한 만큼, 새 점포 인테리어 시공과 기존 매장 원상복구가 함께 발생하는 지역입니다.",
     nearby: ["별내", "도농", "구리"],
   },
   "광명": {
@@ -1250,7 +1250,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "노후 상가와 전통시장 점포 교체가 이어지는 상권으로, 리모델링과 원상복구 수요가 꾸준한 지역입니다.",
+      "광명사거리 일대는 전통시장과 먹자골목이 결합된 광명의 대표 번화가입니다. 서울과 인접한 고밀도 주거를 배경으로 노후 상가와 시장 점포의 교체가 이어져, 인테리어 리모델링과 원상복구 수요가 꾸준한 지역입니다.",
     nearby: ["철산", "구로", "개봉"],
   },
   "철산": {
@@ -1272,7 +1272,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "역세권 점포 교체와 상가 리모델링에 따른 철거·원상복구 수요가 발생하는 지역입니다.",
+      "철산은 철산역과 광명시청을 중심으로 형성된 역세권 상권으로, 관공서·오피스와 대단지 주거가 어우러진 지역입니다. 역세권 점포 교체와 상가 리모델링이 이어지며, 철거·원상복구 수요가 꾸준히 발생합니다.",
     nearby: ["광명", "가산디지털단지", "독산"],
   },
   "운정": {
@@ -1294,7 +1294,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가 입점이 계속되는 신도시로, 신규 인테리어 시공과 기존 점포 원상복구가 함께 발생합니다.",
+      "운정신도시는 운정역과 중심상업지구를 축으로 빠르게 확장된 신도시 상권입니다. 신규 상가 입점에 따른 개업이 활발한 만큼, 새 매장의 인테리어 시공과 기존 점포의 원상복구가 함께 발생하는 지역입니다.",
     nearby: ["야당", "교하", "일산"],
   },
   "김포한강": {
@@ -1316,7 +1316,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가 입점이 계속되는 신도시로, 신규 인테리어 시공과 기존 점포 원상복구가 함께 발생합니다.",
+      "김포 한강신도시는 구래·장기지구를 중심으로 조성된 주거 밀집형 신도시 상권입니다. 생활밀착형 음식점·카페·학원이 이어지고 신규 상가 입점이 계속되며, 새 점포 인테리어와 기존 매장 원상복구 수요가 함께 발생하는 지역입니다.",
     nearby: ["구래", "장기", "운양"],
   },
   "평택고덕": {
@@ -1338,7 +1338,7 @@ const REGIONS_GYEONGGI = {
       },
     ],
     demolition:
-      "신축 상가 입점이 계속되는 신도시로, 신규 인테리어 시공과 기존 점포 원상복구가 함께 발생합니다.",
+      "평택 고덕신도시는 삼성전자 평택캠퍼스 배후로 빠르게 성장한 신도시 상권입니다. 젊은 직장인·가족 단위 유입과 함께 상가 개업이 활발한 만큼, 새 매장의 인테리어 시공과 기존 점포의 원상복구가 함께 발생하는 지역입니다.",
     nearby: ["평택역", "송탄", "안중"],
   },
 };
@@ -4240,6 +4240,80 @@ const KEYWORDS = {
       },
     ],
   },
+
+  "철거": {
+    // === 철거 페이지를 켤 지역 화이트리스트 ===
+    // 여기에 지역명이 있는 지역만 /{지역}/철거 페이지가 생성됩니다.
+    // 새 시·도 서두 보강이 끝나면 그 지역명들을 아래 배열에 추가하세요.
+    // (강원·제주는 철거 미진행 → 영구히 목록에서 제외)
+    allowRegions: [
+      // 경기 (16)
+      "광교", "영통", "동탄1", "동탄2", "분당", "판교", "일산", "평촌",
+      "중동", "별내", "다산", "광명", "철산", "운정", "김포한강", "평택고덕",
+    ],
+    title: "{{REGION}} 철거·원상복구 | 세이브샵 - 무료 현장견적, 폐기물 처리까지",
+    description:
+      "{{REGION}} 상가·점포 철거와 원상복구, 전화 한 통이면 끝. 음식점·카페 인테리어 철거부터 사무실 원상복구, 간판·전기 철거, 폐업 점포 정리까지. 무료 현장견적·폐기물 처리 포함. 상담 010-4668-4942.",
+    heroTitle: "{{REGION}} 철거·원상복구",
+    crumb: "철거·원상복구",
+    highlight: null,
+    // 하이어로 칩 — 철거용
+    heroTags: ["무료 현장견적", "폐기물 처리 포함", "원상복구 범위 시공", "당일 상담"],
+    // 키워드별 섹션 노출 제어 (B안)
+    sections: { products: false, cardflow: false },
+    intro: {
+      label: "DEMOLITION",
+      heading: "점포 철거·원상복구,<br>현장에 맞게 정확하게",
+      // 첫 문단을 지역의 demolition 필드에서 가져옴
+      contextField: "demolition",
+      // 매트릭스 헤더/안내문 철거용으로 교체 + 지역 extraRows 차단
+      allowExtraRows: false,
+      matrixHead: { c1: "철거 유형", c2: "작업 범위", c3: "주요 내용" },
+      matrixNote:
+        "※ 그 외 현장도 상황에 맞춰 안내해 드립니다. {{REGION}} 담당자와 상담으로 확인하세요.",
+      bodyPool: [
+        [
+          "음식점 주방 철거인지, 사무실 원상복구인지, 간판·전기만 정리하면 되는지에 따라 작업 범위와 비용이 크게 달라집니다. 업종과 평수, 현재 상태를 알려주시면 현장에 맞는 방식을 상담해 드립니다.",
+          "같은 점포 철거라도 주방 설비가 있는 음식점과 인테리어 위주의 카페는 작업이 전혀 다릅니다. 매장 형태와 평수를 알려주시면 꼭 필요한 범위만 정확하게 안내해 드립니다.",
+          "철거는 현장마다 조건이 달라 일률적인 견적이 어렵습니다. 업종·평수·바닥과 천장 상태를 알려주시면 불필요한 작업 없이 필요한 범위만 제안해 드립니다.",
+        ],
+        [
+          "최근에는 임대차 계약상 원상복구 범위를 두고 임대인과 의견이 갈리는 경우가 많아, 철거 전에 복구 범위를 명확히 확인하는 사장님이 늘고 있습니다. {{REGION}}에서도 현장 확인 후 범위를 분명히 정리해 진행합니다.",
+          "폐업·이전이 결정되면 원상복구를 어디까지 해야 하는지가 가장 큰 고민입니다. {{REGION}} 현장을 직접 확인해 계약 조건에 맞는 범위를 짚어드리고, 과한 작업으로 비용이 새지 않도록 안내합니다.",
+          "원상복구는 범위를 잘못 잡으면 비용이 크게 늘기도, 임대인과 분쟁이 생기기도 합니다. {{REGION}}에서도 현장과 계약 내용을 함께 확인해 적정 범위를 잡아드립니다.",
+        ],
+        [
+          "현장 견적은 무료로 진행하며, 철거 후 발생하는 폐기물 처리까지 포함해 정찰 견적으로 안내드립니다. 추가 비용 걱정 없이 한 번에 마무리하실 수 있습니다.",
+          "출장·현장 견적 비용은 받지 않습니다. 폐기물 처리와 정리까지 포함한 명확한 견적으로, 진행 중 금액이 늘어나는 일이 없도록 책임지고 안내드립니다.",
+          "무료 현장 견적에 폐기물 처리까지 포함해 진행합니다. 별도 업체를 따로 부를 필요 없이, 철거부터 정리·마감까지 한 번에 끝내드립니다.",
+        ],
+      ],
+      matrix: [
+        { biz: "음식점·주방 철거", gear: "주방설비·덕트·바닥", why: "그리스트랩·배관 정리, 유증기 덕트 해체." },
+        { biz: "카페·인테리어 철거", gear: "목공·조명·바닥재", why: "매립 배선 정리, 바닥 원상복구." },
+        { biz: "사무실 원상복구", gear: "파티션·바닥·도장", why: "임대차 계약상 원상복구 범위 시공." },
+        { biz: "간판·전기 철거", gear: "외부 간판·전기설비", why: "옥외광고물 철거, 전기 안전 마감." },
+        { biz: "폐업 점포 정리", gear: "집기·폐기물 일괄", why: "잔존물·폐기물 처리 포함." },
+      ],
+      benefitsHead: {
+        label: "WHY SAVESHOP",
+        title: "신속 · 정직 · 정확<br><span class=\"hl\">믿을 수 있는 시공.</span>",
+        desc: "현장에 맞는 정확한 견적과 책임 시공으로 사장님의 마무리를 돕겠습니다.",
+      },
+      benefits: [
+        { icon: "check", title: "무료 현장 견적", desc: "출장비·견적비 0원. 현장을 직접 확인하고 정확한 범위와 금액을 안내드립니다." },
+        { icon: "star", title: "폐기물 처리까지 한 번에", desc: "철거 후 폐기물 처리와 정리까지 포함. 별도 업체를 따로 부를 필요가 없습니다." },
+        { icon: "calendar", title: "원상복구 범위 책임 시공", desc: "임대차 계약 조건에 맞춰 원상복구 범위를 잡고, 책임지고 마감해 드립니다." },
+      ],
+    },
+    faq: [
+      { q: "철거 비용은 어떻게 정해지나요?", a: "업종·평수·철거 범위·폐기물 양에 따라 달라집니다. {{REGION}} 현장을 직접 확인한 뒤 무료로 정찰 견적을 안내드립니다." },
+      { q: "철거 작업은 얼마나 걸리나요?", a: "일반 점포 기준 하루~이틀 내 마무리되는 경우가 많습니다. 규모와 범위에 따라 현장 확인 후 정확한 일정을 안내드립니다." },
+      { q: "폐기물 처리도 포함되나요?", a: "네. 철거 후 발생하는 폐기물 처리와 현장 정리까지 견적에 포함해 진행합니다." },
+      { q: "임대차 원상복구는 어디까지 해야 하나요?", a: "계약서상 원상복구 범위에 따라 다릅니다. 현장과 계약 내용을 함께 확인해 적정 범위를 짚어드리고, 과한 작업 없이 진행합니다." },
+      { q: "영업 중에 부분 철거도 가능한가요?", a: "가능합니다. 일부 구역만 철거하거나 야간·휴무일에 맞춰 진행하는 등 매장 상황에 맞춰 조율해 드립니다." },
+    ],
+  },
 };
 
 // ===== CTA 하단 추천 배너 (모든 키워드 페이지 공통) =====
@@ -4399,29 +4473,36 @@ function render(regionName, keywordName) {
   let typesHtml = "";
   if (kw.intro.matrix && kw.intro.matrix.length) {
     const emphasis = region.emphasis || [];
-    // 기본 매트릭스 + 지역 전용 추가 줄(extraRows) 합치기
-    const baseRows = [...kw.intro.matrix, ...(region.extraRows || [])];
-    // 강조 업종을 앞으로 정렬
-    const rows = baseRows.sort((a, b) => {
+    // 키워드가 extraRows 합치기를 허용할 때만 지역 전용 줄 추가 (철거 등은 차단)
+    const allowExtra = kw.intro.allowExtraRows !== false;
+    const baseRows = allowExtra
+      ? [...kw.intro.matrix, ...(region.extraRows || [])]
+      : [...kw.intro.matrix];
+    // 강조 업종을 앞으로 정렬 (extraRows 미사용 시 강조 정렬도 생략 가능)
+    const rows = allowExtra ? baseRows.sort((a, b) => {
       const ai = emphasis.indexOf(a.biz);
       const bi = emphasis.indexOf(b.biz);
       const aw = ai === -1 ? 999 : ai;
       const bw = bi === -1 ? 999 : bi;
       return aw - bw;
-    });
+    }) : baseRows;
     const trs = rows
       .map((r) => {
-        const hot = emphasis.includes(r.biz);
+        const hot = allowExtra && emphasis.includes(r.biz);
         return `<tr${hot ? ' class="hot"' : ""}><td class="biz">${r.biz}</td><td class="rec">${r.gear}</td><td class="why">${r.why}</td></tr>`;
       })
       .join("\n");
+    const mh = kw.intro.matrixHead || { c1: "업종", c2: "추천 장비", c3: "이유" };
+    const note = kw.intro.matrixNote
+      ? kw.intro.matrixNote.replace(/{{REGION}}/g, regionName)
+      : `※ 그 외 업종도 매장 환경에 맞춰 최적의 장비를 추천해 드립니다. ${regionName} 담당 매니저와 상담으로 확인하세요.`;
     typesHtml = `
     <div class="matrix-wrap rv" style="margin:2.6em 0 0">
       <table class="biz-matrix">
-        <thead><tr><th>업종</th><th>추천 장비</th><th>이유</th></tr></thead>
+        <thead><tr><th>${mh.c1}</th><th>${mh.c2}</th><th>${mh.c3}</th></tr></thead>
         <tbody>${trs}</tbody>
       </table>
-      <p class="matrix-note">※ 그 외 업종도 매장 환경에 맞춰 최적의 장비를 추천해 드립니다. ${regionName} 담당 매니저와 상담으로 확인하세요.</p>
+      <p class="matrix-note">${note}</p>
     </div>`;
   }
 
@@ -4469,7 +4550,9 @@ function render(regionName, keywordName) {
     kiosk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="1.5"/><rect x="9" y="5" width="6" height="7" rx="1"/><line x1="10" y1="17" x2="14" y2="17"/></svg>',
   };
   let crossSellHtml = "";
-  const liveItems = (CROSS_SELL.items || []).filter((i) => i.live);
+  const liveItems = (CROSS_SELL.items || []).filter(
+    (i) => i.live && i.title.replace(/\s|·/g, "").indexOf(keywordName.replace(/\s|·/g, "")) === -1
+  );
   if (liveItems.length) {
     const cards = liveItems
       .map((it) => {
@@ -4500,14 +4583,27 @@ function render(regionName, keywordName) {
     `<span class="reg" data-region>${regionName}</span>`
   );
 
+  // 첫 문단(REGION_CONTEXT) 소스: 키워드가 contextField를 지정하면 그 지역 필드 사용
+  // (철거 → region.demolition). 없거나 비면 기존 region.context로 폴백.
+  const ctxField = kw.intro.contextField;
+  const introContext =
+    (ctxField && region[ctxField]) ? region[ctxField] : region.context;
+
+  // 하이어로 칩: 키워드가 heroTags를 지정하면 그걸로, 없으면 카드단말기 기본 4종
+  const defaultTags = ["설치비 0원", "1:1 전담 매니저", "A/S 1년 보장", "전자계약서"];
+  const heroTags = (kw.heroTags || defaultTags)
+    .map((t) => `<span><b>✓</b> ${t}</span>`)
+    .join("\n      ");
+
   // 치환 맵
   const map = {
     "{{REGION}}": regionName,
     "{{HERO_TITLE}}": heroRaw,
+    "{{HERO_TAGS}}": heroTags,
     "{{KW_CRUMB}}": kw.crumb || "카드단말기",
     "{{KW_LABEL}}": kw.intro.label,
     "{{KW_HEADING}}": kw.intro.heading,
-    "{{REGION_CONTEXT}}": region.context,
+    "{{REGION_CONTEXT}}": introContext,
     "{{KW_BODY}}": kwBody,
     "{{KW_TYPES}}": typesHtml,
     "{{KW_BENEFITS}}": benefitsHtml,
@@ -4530,6 +4626,16 @@ function render(regionName, keywordName) {
     /<!--{{REVIEWS_START}}-->[\s\S]*?<!--{{REVIEWS_END}}-->/,
     ""
   );
+
+  // 키워드별 섹션 노출 제어 (B안). sections에 false면 마커 구간 통째로 제거.
+  // 기본값: 지정 없으면 모두 노출(카드단말기 하위호환).
+  const sections = kw.sections || {};
+  if (sections.products === false) {
+    html = html.replace(/<!--{{PRODUCTS_START}}-->[\s\S]*?<!--{{PRODUCTS_END}}-->/, "");
+  }
+  if (sections.cardflow === false) {
+    html = html.replace(/<!--{{CARDFLOW_START}}-->[\s\S]*?<!--{{CARDFLOW_END}}-->/, "");
+  }
 
   // 나머지 placeholder 치환 (지역 들어간 FAQ 답변도 처리)
   for (const [k, v] of Object.entries(map)) {
@@ -4578,6 +4684,9 @@ export default {
       // 지역 × 키워드 동적 페이지
       for (const region of Object.keys(REGIONS)) {
         for (const keyword of Object.keys(KEYWORDS)) {
+          // allowRegions가 있는 키워드(철거)는 허용 지역만 사이트맵에 포함
+          const allow = KEYWORDS[keyword].allowRegions;
+          if (allow && !allow.includes(region)) continue;
           const loc =
             base + "/" + encodeURIComponent(region) + "/" + encodeURIComponent(keyword);
           urls.push({ loc, priority: "0.7" });
@@ -4612,6 +4721,12 @@ export default {
     if (parts.length === 2) {
       const [region, keyword] = parts;
       if (REGIONS[region] && KEYWORDS[keyword]) {
+        // 키워드에 allowRegions(허용 지역 목록)가 있으면, 그 목록에 없는 지역은 생성 안 함.
+        // (예: 철거는 경기 등 지정 지역만. 강원·제주는 목록에 없어 제외됨)
+        const allow = KEYWORDS[keyword].allowRegions;
+        if (allow && !allow.includes(region)) {
+          return env.ASSETS.fetch(request); // 정적 처리(404 또는 /demolition 등)로 넘김
+        }
         const html = render(region, keyword);
         return new Response(html, {
           headers: { "content-type": "text/html;charset=UTF-8" },
