@@ -151,6 +151,29 @@
   .sec-title{font-family:var(--display);font-weight:700;font-size:clamp(27px,4vw,42px);line-height:1.08;letter-spacing:-.025em;color:var(--ink)}
   .sec-title .hl{color:var(--neon-dim)}
   .sec-desc{font-size:16px;color:var(--muted);margin-top:14px}
+  /* ---- 지역별 철거 배너 ---- */
+  .demo-region{margin-top:34px}
+  .demo-sido-chips{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;max-width:900px;margin:0 auto}
+  .demo-sido-chip{font-family:var(--display);font-size:15px;font-weight:500;padding:10px 14px;border-radius:999px;cursor:pointer;border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink-2);transition:all .18s;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+  .demo-sido-chip:hover{border-color:var(--neon);color:var(--neon-dim)}
+  .demo-sido-chip.on{background:var(--neon);border-color:var(--neon);color:#fff}
+  .demo-sk-wrap{margin:18px auto 0;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:20px 22px;max-width:900px;animation:skFade .25s ease}
+  @keyframes skFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .demo-sk-label{font-size:13px;color:var(--muted);margin-bottom:14px}
+  .demo-sk-label b{color:var(--ink);font-weight:600}
+  .demo-sk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .demo-sk-item{display:flex;align-items:center;justify-content:space-between;text-decoration:none;padding:11px 14px;border-radius:10px;background:var(--neon-soft);border:1px solid var(--neon);color:var(--neon-dim);font-family:var(--display);font-size:14px;font-weight:600;transition:all .15s}
+  .demo-sk-item:hover{background:var(--neon);color:#fff;transform:translateY(-2px)}
+  .demo-sk-item .arw{font-size:13px}
+  @media(max-width:780px){
+    .demo-sk-grid{grid-template-columns:repeat(2,1fr)}
+    .demo-sido-chips{grid-template-columns:repeat(4,1fr)}
+    .demo-sido-chip{font-size:14px;padding:9px 10px}
+  }
+  @media(max-width:480px){
+    .demo-sido-chips{grid-template-columns:repeat(3,1fr);gap:7px}
+    .demo-sido-chip{font-size:13px;padding:9px 6px}
+  }
 
   /* ===== INTRO (폐업 원상복구 소개) ===== */
   .intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
@@ -532,6 +555,24 @@
   </div>
 </section>
 
+<!-- 지역별 철거 바로가기 -->
+<section class="blk" id="demoRegions">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="sec-label">LOCAL SERVICE</div>
+      <h2 class="sec-title">우리 동네 <span class="hl">철거·원상복구.</span></h2>
+      <p class="sec-desc"><span style="white-space:nowrap">지역을 선택하시면,</span> <span style="white-space:nowrap">해당 상권 맞춤 철거·원상복구 정보를 확인하실 수 있습니다.</span></p>
+    </div>
+    <div class="demo-region rv">
+      <div class="demo-sido-chips" id="demoSidoChips"></div>
+      <div class="demo-sk-wrap" id="demoSkWrap" hidden>
+        <div class="demo-sk-label" id="demoSkLabel"></div>
+        <div class="demo-sk-grid" id="demoSkGrid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CONTACT -->
 <section class="blk" id="contact">
   <div class="wrap ct-grid">
@@ -598,6 +639,61 @@
   }
 
   function comingSoon(name){alert(name+' 페이지는 현재 준비 중입니다.\n빠르게 찾아뵙겠습니다. 문의는 전화 또는 상담 신청을 이용해 주세요.');}
+
+  /* ===== 지역별 철거 배너 =====
+     철거 페이지가 있는 지역만(강원·제주 영구 제외 → 15개 시·도) 노출.
+     링크는 /{상권}/철거 (워커스 동적 페이지). */
+  var DEMO_SIDO = [
+    { name:"서울", areas:["강남역","홍대","성수","건대","잠실","신촌"] },
+    { name:"경기", areas:["광교","영통","동탄1","동탄2","분당","판교","일산","평촌","중동","별내","다산","광명","철산","운정","김포한강","평택고덕"] },
+    { name:"인천", areas:["부평","송도","구월동","청라","검단","영종도","인천논현"] },
+    { name:"부산", areas:["서면","해운대","남포동","광안리","전포","부산대","부산역","명지"] },
+    { name:"대구", areas:["동성로","수성못","들안길","칠곡","경북대","동대구역","앞산","율하지구"] },
+    { name:"광주", areas:["충장로","상무지구","첨단지구","수완지구","전남대","봉선동","동명동","하남지구"] },
+    { name:"대전", areas:["둔산동","은행동","봉명동","궁동","도안신도시","관저동","노은지구","테크노밸리"] },
+    { name:"울산", areas:["삼산동","성남동","무거동","달동","전하동","옥동","천상지구","송정지구"] },
+    { name:"세종", areas:["나성동","보람동","도담동","아름동","새롬동","조치원"] },
+    { name:"충북", areas:["성안길","지웰시티","청주대","오송","오창","충주","제천","충북혁신도시","진천","옥천"] },
+    { name:"충남", areas:["천안 서북구","천안 동남구","아산","당진","서산","논산","태안","공주"] },
+    { name:"전북", areas:["객사","신시가지","한옥마을","익산","군산","정읍","남원","완주"] },
+    { name:"전남", areas:["순천","여수","목포","광양","나주","무안"] },
+    { name:"경북", areas:["포항","구미","경주","안동","김천","경산","영주","영천","상주","문경"] },
+    { name:"경남", areas:["상남동","마산","진해","김해","양산","진주","거제","통영"] }
+  ];
+
+  (function renderDemoRegions(){
+    var chipBox=document.getElementById('demoSidoChips');
+    var wrap=document.getElementById('demoSkWrap');
+    var label=document.getElementById('demoSkLabel');
+    var grid=document.getElementById('demoSkGrid');
+    if(!chipBox)return;
+
+    DEMO_SIDO.forEach(function(sido){
+      var chip=document.createElement('button');
+      chip.className='demo-sido-chip';
+      chip.type='button';
+      chip.textContent=sido.name;
+      chip.addEventListener('click',function(){
+        chipBox.querySelectorAll('.demo-sido-chip').forEach(function(c){c.classList.remove('on');});
+        chip.classList.add('on');
+        showAreas(sido);
+      });
+      chipBox.appendChild(chip);
+    });
+
+    function showAreas(sido){
+      label.innerHTML='<b>'+sido.name+'</b> 지역 상권 · 클릭하면 철거·원상복구 정보로 이동합니다';
+      grid.innerHTML='';
+      sido.areas.forEach(function(area){
+        var a=document.createElement('a');
+        a.className='demo-sk-item';
+        a.href='/'+encodeURIComponent(area)+'/'+encodeURIComponent('철거');
+        a.innerHTML=area+'<span class="arw">→</span>';
+        grid.appendChild(a);
+      });
+      wrap.hidden=false;
+    }
+  })();
   function toggleChip(el){el.classList.toggle('on');}
 
   // 상단바: 다크 히어로 위에 있을 때 투명+밝은 메뉴 (card-terminal과 동일)

@@ -95,6 +95,14 @@
   }
 
   /* ---- 지역별 설치 (p4b) ---- */
+  .kw-tabs{display:inline-flex;gap:6px;padding:5px;border-radius:999px;background:var(--bg);border:1px solid var(--line-2);margin:0 auto 22px}
+  .kw-tab{font-family:var(--display);font-size:15px;font-weight:600;padding:9px 22px;border-radius:999px;cursor:pointer;border:none;background:transparent;color:var(--ink-2);transition:all .18s;white-space:nowrap}
+  .kw-tab:hover{color:var(--neon-dim)}
+  .kw-tab.on{background:var(--neon);color:#fff}
+  .kw-tabs-wrap{text-align:center}
+  @media(max-width:480px){
+    .kw-tab{font-size:14px;padding:9px 18px}
+  }
   .region-head{max-width:680px;margin-bottom:34px}
   .region-head h2{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,52px);line-height:1.05;letter-spacing:-.03em;margin-bottom:18px;color:var(--ink)}
   .region-head h2 .glowtxt{color:var(--neon-dim)}
@@ -493,7 +501,13 @@
       <div class="region-head">
         <div class="p-label rv">LOCAL SERVICE</div>
         <h2 class="rv d1">내 지역 <span class="glowtxt">전담 매니저</span>를<br>찾아보세요.</h2>
-        <p class="rv d2"><span style="white-space:nowrap">우리 동네 상권을 선택하시면,</span> <span style="white-space:nowrap">지역 맞춤 설치 정보를 확인하실 수 있습니다.</span></p>
+        <p class="rv d2"><span style="white-space:nowrap">서비스와 우리 동네 상권을 선택하시면,</span> <span style="white-space:nowrap">지역 맞춤 정보를 확인하실 수 있습니다.</span></p>
+      </div>
+      <div class="kw-tabs-wrap rv d3">
+        <div class="kw-tabs" id="kwTabs" role="tablist">
+          <button class="kw-tab on" type="button" data-kw="카드단말기" role="tab">카드단말기</button>
+          <button class="kw-tab" type="button" data-kw="철거" role="tab">철거·원상복구</button>
+        </div>
       </div>
       <div class="sido-chips rv d3" id="sidoChips"></div>
       <div class="sangkwon-wrap rv d4" id="sangkwonWrap" hidden>
@@ -613,6 +627,8 @@
      나중에 지역 추가: 해당 시·도 배열에 상권명만 넣으면 칩·링크 자동 생성.
      링크는 /{상권}/{KW} 형식 (워커스 동적 페이지). KW는 아래 REGION_KW로 일괄 지정. */
   var REGION_KW = "카드단말기";
+  // 철거 페이지가 없는 시·도 (allowRegions 영구 제외). 철거 탭에서 이 시·도는 숨김.
+  var DEMO_EXCLUDE_SIDO = ["강원","제주"];
   var SIDO = [
     { name:"서울", areas:["강남역","홍대","성수","건대","잠실","신촌"] },
     { name:"경기", areas:["광교","영통","동탄1","동탄2","분당","판교","일산","평촌","중동","별내","다산","광명","철산","운정","김포한강","평택고덕"] },
@@ -638,41 +654,72 @@
     var wrap=document.getElementById('sangkwonWrap');
     var label=document.getElementById('sangkwonLabel');
     var grid=document.getElementById('sangkwonGrid');
+    var tabBox=document.getElementById('kwTabs');
     if(!chipBox)return;
 
-    SIDO.forEach(function(sido){
-      var active=sido.areas.length>0;
-      var chip=document.createElement('button');
-      chip.className='sido-chip'+(active?'':' soon-chip');
-      chip.type='button';
-      chip.innerHTML=active ? sido.name : sido.name+'<span class="soon">준비중</span>';
-      if(active){
-        chip.addEventListener('click',function(){
-          chipBox.querySelectorAll('.sido-chip').forEach(function(c){c.classList.remove('on');});
-          chip.classList.add('on');
-          showAreas(sido);
-        });
-      } else {
-        chip.addEventListener('click',function(){
-          comingSoon(sido.name+' 지역');
-        });
+    var curKw="카드단말기";
+
+    // 현재 키워드에 맞는 시·도 목록 (철거는 강원·제주 제외)
+    function sidoList(){
+      if(curKw==="철거"){
+        return SIDO.filter(function(s){return DEMO_EXCLUDE_SIDO.indexOf(s.name)===-1;});
       }
-      chipBox.appendChild(chip);
-    });
+      return SIDO;
+    }
+
+    function renderChips(){
+      chipBox.innerHTML='';
+      wrap.hidden=true;
+      sidoList().forEach(function(sido){
+        var active=sido.areas.length>0;
+        var chip=document.createElement('button');
+        chip.className='sido-chip'+(active?'':' soon-chip');
+        chip.type='button';
+        chip.innerHTML=active ? sido.name : sido.name+'<span class="soon">준비중</span>';
+        if(active){
+          chip.addEventListener('click',function(){
+            chipBox.querySelectorAll('.sido-chip').forEach(function(c){c.classList.remove('on');});
+            chip.classList.add('on');
+            showAreas(sido);
+          });
+        } else {
+          chip.addEventListener('click',function(){
+            comingSoon(sido.name+' 지역');
+          });
+        }
+        chipBox.appendChild(chip);
+      });
+    }
 
     function showAreas(sido){
-      label.innerHTML='<b>'+sido.name+'</b> 지역 상권 · 클릭하면 설치 정보로 이동합니다';
+      var verb=(curKw==="철거")?'철거·원상복구 정보로 이동합니다':'설치 정보로 이동합니다';
+      label.innerHTML='<b>'+sido.name+'</b> 지역 상권 · 클릭하면 '+verb;
       grid.innerHTML='';
       sido.areas.forEach(function(area){
         var a=document.createElement('a');
         a.className='sk-item';
-        a.href='/'+encodeURIComponent(area)+'/'+encodeURIComponent(REGION_KW);
+        a.href='/'+encodeURIComponent(area)+'/'+encodeURIComponent(curKw);
         a.innerHTML=area+'<span class="arw">→</span>';
         grid.appendChild(a);
       });
       wrap.hidden=false;
       wrap.querySelectorAll('.rv').forEach(function(el){el.classList.add('in');});
     }
+
+    // 탭 전환
+    if(tabBox){
+      tabBox.querySelectorAll('.kw-tab').forEach(function(tab){
+        tab.addEventListener('click',function(){
+          if(tab.classList.contains('on'))return;
+          tabBox.querySelectorAll('.kw-tab').forEach(function(t){t.classList.remove('on');});
+          tab.classList.add('on');
+          curKw=tab.getAttribute('data-kw');
+          renderChips();
+        });
+      });
+    }
+
+    renderChips();
   })();
 
   // 모바일 햄버거 메뉴 토글
