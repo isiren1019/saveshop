@@ -340,7 +340,12 @@ const TEMPLATE = `<!DOCTYPE html>
       <a href="tel:010-4668-4942" class="btn-neon">☎ 010-4668-4942</a>
       <a href="#contact" class="btn-line">간편 상담 신청 →</a>
     </div>
-    <div class="hero-tags">{{HERO_TAGS}}</div>
+    <div class="hero-tags">
+      <span><b>✓</b> 설치비 0원</span>
+      <span><b>✓</b> 1:1 전담 매니저</span>
+      <span><b>✓</b> A/S 1년 보장</span>
+      <span><b>✓</b> 전자계약서</span>
+    </div>
   </div>
 </header>
 
@@ -360,7 +365,6 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
-<!--{{PRODUCTS_START}}-->
 <!-- PRODUCTS -->
 <section class="blk" id="products">
   <div class="wrap">
@@ -565,9 +569,6 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
-<!--{{PRODUCTS_END}}-->
-
-<!--{{CARDFLOW_START}}-->
 <!-- PROCESS -->
 <section class="blk" id="process">
   <div class="wrap">
@@ -626,7 +627,6 @@ const TEMPLATE = `<!DOCTYPE html>
     </div>
   </div>
 </section>
-<!--{{CARDFLOW_END}}-->
 
 <!-- FAQ -->
 <section class="blk" id="faq" style="background:#fff">
@@ -5019,14 +5019,22 @@ const KEYWORDS = {
       "강남역", "홍대", "성수", "건대", "잠실", "신촌",
       // 인천 (7)
       "부평", "송도", "구월동", "청라", "검단", "영종도", "인천논현",
+      // 경기 (16)
+      "광교", "영통", "동탄1", "동탄2", "분당", "판교", "일산", "평촌",
+      "중동", "별내", "다산", "광명", "철산", "운정", "김포한강", "평택고덕",
+      // 충북 (10)
+      "성안길", "지웰시티", "청주대", "오송", "오창", "충주", "제천",
+      "충북혁신도시", "진천", "옥천",
+      // 충남 (8)
+      "천안 서북구", "천안 동남구", "아산", "당진", "서산", "논산", "태안", "공주",
       // 부산 (8)
       "서면", "해운대", "남포동", "광안리", "전포", "부산대", "부산역", "명지",
-      // 대전 (8)
-      "둔산동", "은행동", "봉명동", "궁동", "도안신도시", "관저동", "노은지구", "테크노밸리",
       // 대구 (8)
       "동성로", "수성못", "들안길", "칠곡", "경북대", "동대구역", "앞산", "율하지구",
       // 광주 (8)
       "충장로", "상무지구", "첨단지구", "수완지구", "전남대", "봉선동", "동명동", "하남지구",
+      // 대전 (8)
+      "둔산동", "은행동", "봉명동", "궁동", "도안신도시", "관저동", "노은지구", "테크노밸리",
       // 울산 (8)
       "삼산동", "성남동", "무거동", "달동", "전하동", "옥동", "천상지구", "송정지구",
       // 세종 (6)
@@ -5039,14 +5047,6 @@ const KEYWORDS = {
       "객사", "신시가지", "한옥마을", "익산", "군산", "정읍", "남원", "완주",
       // 전남 (6)
       "순천", "여수", "목포", "광양", "나주", "무안",
-      // 경기 (16)
-      "광교", "영통", "동탄1", "동탄2", "분당", "판교", "일산", "평촌",
-      "중동", "별내", "다산", "광명", "철산", "운정", "김포한강", "평택고덕",
-      // 충북 (10)
-      "성안길", "지웰시티", "청주대", "오송", "오창", "충주", "제천",
-      "충북혁신도시", "진천", "옥천",
-      // 충남 (8)
-      "천안 서북구", "천안 동남구", "아산", "당진", "서산", "논산", "태안", "공주",
     ],
     title: "{{REGION}} 철거·원상복구 | 세이브샵 - 무료 현장견적, 폐기물 처리까지",
     description:
@@ -5140,7 +5140,9 @@ const CROSS_SELL = {
       title: "철거 · 원상복구",
       desc: "폐업·이전 매장 정리",
       icon: "tools",
-      link: "/demolition",
+      link: "/{{REGION}}/철거",
+      // 철거 페이지가 없는 지역(강원·제주)은 render.js에서 /demolition으로 폴백
+      fallbackLink: "/demolition",
       type: "page",
       live: true,
     },
@@ -5362,9 +5364,20 @@ function render(regionName, keywordName) {
     (i) => i.live && i.title.replace(/\s|·/g, "").indexOf(keywordName.replace(/\s|·/g, "")) === -1
   );
   if (liveItems.length) {
+    const demoAllow = (KEYWORDS["철거"] && KEYWORDS["철거"].allowRegions) || [];
     const cards = liveItems
       .map((it) => {
-        const href = (it.link || "#").replace(/{{REGION}}/g, regionName);
+        // 링크가 {{REGION}}/철거를 가리키는데 해당 지역에 철거 페이지가 없으면
+        // (강원·제주 등 allowRegions 미포함) fallbackLink(/demolition)로 폴백
+        let linkTpl = it.link || "#";
+        if (
+          it.fallbackLink &&
+          /{{REGION}}\/철거/.test(linkTpl) &&
+          demoAllow.indexOf(regionName) === -1
+        ) {
+          linkTpl = it.fallbackLink;
+        }
+        const href = linkTpl.replace(/{{REGION}}/g, regionName);
         const ic = ICONS[it.icon] || ICONS.desktop;
         return `<a class="xs-card" href="${href}">
         <span class="xs-ic">${ic}</span>
