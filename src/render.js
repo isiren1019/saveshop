@@ -146,9 +146,20 @@ function render(regionName, keywordName) {
     (i) => i.live && i.title.replace(/\s|·/g, "").indexOf(keywordName.replace(/\s|·/g, "")) === -1
   );
   if (liveItems.length) {
+    const demoAllow = (KEYWORDS["철거"] && KEYWORDS["철거"].allowRegions) || [];
     const cards = liveItems
       .map((it) => {
-        const href = (it.link || "#").replace(/{{REGION}}/g, regionName);
+        // 링크가 {{REGION}}/철거를 가리키는데 해당 지역에 철거 페이지가 없으면
+        // (강원·제주 등 allowRegions 미포함) fallbackLink(/demolition)로 폴백
+        let linkTpl = it.link || "#";
+        if (
+          it.fallbackLink &&
+          /{{REGION}}\/철거/.test(linkTpl) &&
+          demoAllow.indexOf(regionName) === -1
+        ) {
+          linkTpl = it.fallbackLink;
+        }
+        const href = linkTpl.replace(/{{REGION}}/g, regionName);
         const ic = ICONS[it.icon] || ICONS.desktop;
         return `<a class="xs-card" href="${href}">
         <span class="xs-ic">${ic}</span>
