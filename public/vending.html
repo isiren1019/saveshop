@@ -336,7 +336,7 @@
 </section>
 
 <!-- 설치후기 -->
-<section class="blk">
+<section class="blk" id="reviewsSection">
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-label">REVIEWS</div>
@@ -344,14 +344,8 @@
       <p class="sec-desc">전국 다양한 공간에 설치된 스마트 자판기 현장입니다. 옆으로 넘겨 확인해 보세요.</p>
     </div>
     <div class="rev-slider">
-      <div class="rev-track" id="revTrack">
-        <div class="rev-card"><div class="rimg"><img src="/images/vending/review1.jpg" alt="설치 사례"></div></div>
-        <div class="rev-card"><div class="rimg"><img src="/images/vending/review2.jpg" alt="설치 사례"></div></div>
-        <div class="rev-card"><div class="rimg"><img src="/images/vending/review3.jpg" alt="설치 사례"></div></div>
-        <div class="rev-card"><div class="rimg"><img src="/images/vending/review4.jpg" alt="설치 사례"></div></div>
-        <div class="rev-card"><div class="rimg"><img src="/images/vending/review5.jpg" alt="설치 사례"></div></div>
-      </div>
-      <div class="rev-nav">
+      <div class="rev-track" id="revTrack"></div>
+      <div class="rev-nav" id="revNav" style="display:none">
         <button onclick="revScroll(-1)" aria-label="이전">‹</button>
         <button onclick="revScroll(1)" aria-label="다음">›</button>
       </div>
@@ -422,6 +416,44 @@
     var step=card?card.offsetWidth+16:356;
     t.scrollBy({left:dir*step,behavior:'smooth'});
   }
+
+  // 후기 이미지 자동 로딩: review1.jpg부터 순서대로 존재하는 만큼 카드 생성
+  (function(){
+    var track=document.getElementById('revTrack');
+    if(!track)return;
+    var MAX=60;           // 안전 상한 (review1 ~ review60)
+    var loaded=0;
+    function tryLoad(n){
+      if(n>MAX){ finish(); return; }
+      var img=new Image();
+      img.onload=function(){
+        var card=document.createElement('div');
+        card.className='rev-card';
+        card.innerHTML='<div class="rimg"><img src="/images/vending/review'+n+'.jpg" alt="설치 사례" loading="lazy"></div>';
+        track.appendChild(card);
+        loaded++;
+        tryLoad(n+1);      // 다음 번호 계속 시도
+      };
+      img.onerror=function(){ finish(); };  // 없는 번호를 만나면 중단
+      img.src='/images/vending/review'+n+'.jpg';
+    }
+    function finish(){
+      var nav=document.getElementById('revNav');
+      var section=document.getElementById('reviewsSection');
+      if(loaded===0){
+        // 후기 이미지가 하나도 없으면 섹션 자체를 숨김
+        if(section) section.style.display='none';
+        return;
+      }
+      // 카드가 트랙 너비를 넘칠 때만 화살표 노출
+      if(nav){
+        requestAnimationFrame(function(){
+          nav.style.display = (track.scrollWidth > track.clientWidth + 4) ? 'flex' : 'none';
+        });
+      }
+    }
+    tryLoad(1);
+  })();
   var tb=document.getElementById('topbar');
   var hero=document.querySelector('.hero');
   window.addEventListener('scroll',function(){
