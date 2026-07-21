@@ -5499,7 +5499,7 @@ export default {
       // 정적 페이지
       // ※ 실제 접속 주소(확장자 없는 형태)로 넣는다. /card-terminal.html 처럼 .html을
       //   넣으면 /card-terminal 로 리디렉션되어, 구글이 "리디렉션 페이지"로 표시함.
-      const staticPaths = ["/", "/card-terminal", "/demolition"];
+      const staticPaths = ["/", "/card-terminal", "/demolition", "/vending"];
       for (const p of staticPaths) {
         urls.push({ loc: base + p, priority: p === "/" ? "1.0" : "0.8" });
       }
