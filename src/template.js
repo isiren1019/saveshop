@@ -30,6 +30,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <meta property="og:image" content="https://thesaveshop.com/images/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<link rel="canonical" href="https://thesaveshop.com/{{REGION}}/{{KW_CRUMB}}">
 <meta property="og:url" content="https://thesaveshop.com/{{REGION}}/{{KW_CRUMB}}">
 
 <!-- Twitter Card -->

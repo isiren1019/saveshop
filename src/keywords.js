@@ -279,9 +279,9 @@ const CROSS_SELL = {
       title: "스마트 자판기",
       desc: "무인 자판기 설치",
       icon: "vending",
-      link: "#",
+      link: "/vending",
       type: "page",
-      live: false, // 준비중
+      live: true,
     },
   ],
 };

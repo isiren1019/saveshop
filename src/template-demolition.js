@@ -30,7 +30,8 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
 <meta property="og:image" content="https://thesaveshop.com/images/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" content="https://thesaveshop.com/demolition.html">
+<link rel="canonical" href="https://thesaveshop.com/{{REGION}}/철거">
+<meta property="og:url" content="https://thesaveshop.com/{{REGION}}/철거">
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="상가 철거·매장 원상복구 | 세이브샵 - 무료 견적, 철거 지원금 최대 400만원">
