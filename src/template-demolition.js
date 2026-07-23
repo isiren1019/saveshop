@@ -365,7 +365,7 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
   <nav class="top-menu" id="topMenu">
     <a href="/card-terminal">카드단말기</a>
     <a href="javascript:void(0)" onclick="comingSoon('인터넷·가전')">인터넷·가전<span class="soon">준비중</span></a>
-    <a href="javascript:void(0)" onclick="comingSoon('스마트자판기')">스마트자판기<span class="soon">준비중</span></a>
+    <a href="/vending">스마트자판기</a>
     <a href="/demolition" class="active">철거·원상복구</a>
     <a href="#contact" class="menu-cta">무료 상담 신청</a>
   </nav>

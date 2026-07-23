@@ -311,7 +311,7 @@ const TEMPLATE = `<!DOCTYPE html>
   <nav class="top-menu" id="topMenu">
     <a href="/card-terminal" class="active">카드단말기</a>
     <a href="javascript:void(0)" onclick="comingSoon('인터넷·가전')">인터넷·가전<span class="soon">준비중</span></a>
-    <a href="javascript:void(0)" onclick="comingSoon('스마트자판기')">스마트자판기<span class="soon">준비중</span></a>
+    <a href="/vending">스마트자판기</a>
     <a href="/demolition">철거·원상복구</a>
     <a href="#contact" class="menu-cta">무료 상담 신청</a>
   </nav>
@@ -335,7 +335,12 @@ const TEMPLATE = `<!DOCTYPE html>
       <a href="tel:010-4668-4942" class="btn-neon">☎ 010-4668-4942</a>
       <a href="#contact" class="btn-line">간편 상담 신청 →</a>
     </div>
-    <div class="hero-tags">{{HERO_TAGS}}</div>
+    <div class="hero-tags">
+      <span><b>✓</b> 설치비 0원</span>
+      <span><b>✓</b> 1:1 전담 매니저</span>
+      <span><b>✓</b> A/S 1년 보장</span>
+      <span><b>✓</b> 전자계약서</span>
+    </div>
   </div>
 </header>
 
@@ -355,7 +360,6 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
-<!--{{PRODUCTS_START}}-->
 <!-- PRODUCTS -->
 <section class="blk" id="products">
   <div class="wrap">
@@ -560,9 +564,6 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </section>
 
-<!--{{PRODUCTS_END}}-->
-
-<!--{{CARDFLOW_START}}-->
 <!-- PROCESS -->
 <section class="blk" id="process">
   <div class="wrap">
@@ -621,7 +622,6 @@ const TEMPLATE = `<!DOCTYPE html>
     </div>
   </div>
 </section>
-<!--{{CARDFLOW_END}}-->
 
 <!-- FAQ -->
 <section class="blk" id="faq" style="background:#fff">
