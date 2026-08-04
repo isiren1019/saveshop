@@ -146,18 +146,21 @@ function render(regionName, keywordName) {
     (i) => i.live && i.title.replace(/\s|·/g, "").indexOf(keywordName.replace(/\s|·/g, "")) === -1
   );
   if (liveItems.length) {
-    const demoAllow = (KEYWORDS["철거"] && KEYWORDS["철거"].allowRegions) || [];
     const cards = liveItems
       .map((it) => {
-        // 링크가 {{REGION}}/철거를 가리키는데 해당 지역에 철거 페이지가 없으면
-        // (강원·제주 등 allowRegions 미포함) fallbackLink(/demolition)로 폴백
+        // 링크가 {{REGION}}/{키워드} 형태인데 해당 키워드에 allowRegions가 있고
+        // 현재 지역이 미포함이면(철거의 강원·제주, 포스기의 미오픈 지역 등)
+        // fallbackLink로 폴백. 링크의 키워드명을 추출해 KEYWORDS에서 조회.
         let linkTpl = it.link || "#";
-        if (
-          it.fallbackLink &&
-          /{{REGION}}\/철거/.test(linkTpl) &&
-          demoAllow.indexOf(regionName) === -1
-        ) {
-          linkTpl = it.fallbackLink;
+        if (it.fallbackLink) {
+          const m = linkTpl.match(/{{REGION}}\/(.+)$/);
+          if (m) {
+            const linkedKw = KEYWORDS[m[1]];
+            const allow = linkedKw && linkedKw.allowRegions;
+            if (allow && allow.indexOf(regionName) === -1) {
+              linkTpl = it.fallbackLink;
+            }
+          }
         }
         const href = linkTpl.replace(/{{REGION}}/g, regionName);
         const ic = ICONS[it.icon] || ICONS.desktop;
