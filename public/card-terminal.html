@@ -144,10 +144,10 @@
   .pr-sido{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:var(--bg);transition:all .2s}
   .pr-sido:hover{border-color:var(--line-2);box-shadow:0 6px 20px rgba(12,14,20,.06)}
   .pr-sido h3{font-family:var(--display);font-size:15px;color:var(--ink);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);letter-spacing:-.01em}
-  .pr-sido ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
-  .pr-sido a{display:inline-block;font-size:13px;color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:6px 11px;text-decoration:none;transition:all .15s;white-space:nowrap}
+  .pr-sido ul{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pr-sido a{display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:7px 6px;text-decoration:none;transition:all .15s;white-space:nowrap;min-width:0}
   .pr-sido a:hover{color:var(--neon-dim);background:var(--neon-soft);border-color:var(--neon)}
-  @media(max-width:600px){.pr-grid{grid-template-columns:1fr 1fr;gap:14px}.pr-sido{padding:16px 16px}.pr-sido a{font-size:12.5px;padding:5px 9px}}
+  @media(max-width:600px){.pr-grid{grid-template-columns:1fr;gap:14px}.pr-sido{padding:18px 18px}.pr-sido a{font-size:13px;padding:8px 4px}}
   #products{background:var(--bg-2)}
   #process{background:var(--bg)}
   #screening{background:var(--bg-2)}
@@ -726,15 +726,16 @@
   var POS_REGIONS = [
     { sido: "서울",   list: ["강남역","홍대","성수","건대","잠실","신촌"] },
     { sido: "경기",   list: ["광교","동탄1","분당","판교","일산","평촌"] },
-    { sido: "인천",   list: ["부평","송도","구월동"] },
-    { sido: "부산",   list: ["서면","해운대","남포동","전포"] },
-    { sido: "대구",   list: ["동성로","수성못","들안길"] },
-    { sido: "광주",   list: ["충장로","상무지구"] },
-    { sido: "대전",   list: ["둔산동","은행동"] },
-    { sido: "울산",   list: ["삼산동"] },
-    { sido: "경남",   list: ["상남동"] },
-    { sido: "경북",   list: ["포항"] },
-    { sido: "전북",   list: ["신시가지"] }
+    { sido: "인천",   list: ["부평","송도","구월동","청라","검단","인천논현"] },
+    { sido: "부산",   list: ["서면","해운대","남포동","전포","광안리","부산대"] },
+    { sido: "대구",   list: ["동성로","수성못","들안길","경북대","동대구역","율하지구"] },
+    { sido: "광주",   list: ["충장로","상무지구","첨단지구","수완지구","전남대","봉선동"] },
+    { sido: "대전",   list: ["둔산동","은행동","도안신도시","노은지구","테크노밸리","봉명동"] },
+    { sido: "울산",   list: ["삼산동","성남동","무거동","달동","옥동","전하동"] },
+    { sido: "경남",   list: ["상남동","김해","양산","진주","마산","거제"] },
+    { sido: "경북",   list: ["포항","구미","경주","안동","경산","김천"] },
+    { sido: "전북",   list: ["신시가지","객사","익산","군산","한옥마을","정읍"] },
+    { sido: "전남",   list: ["순천","여수","목포","광양","나주","무안"] }
   ];
   (function renderPosRegions(){
     var grid=document.getElementById('pos-region-grid');
