@@ -24,8 +24,7 @@
 <meta property="og:image" content="https://thesaveshop.com/images/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<link rel="canonical" href="https://thesaveshop.com/card-terminal">
-<meta property="og:url" content="https://thesaveshop.com/card-terminal">
+<meta property="og:url" content="https://thesaveshop.com/card-terminal.html">
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="카드단말기·포스기 설치 | 세이브샵 - 설치비 0원, 전담 매니저">
@@ -141,6 +140,14 @@
 
   /* ===== SECTION SHELL ===== */
   section.blk{padding:80px 0}
+  .pr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+  .pr-sido{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:var(--bg);transition:all .2s}
+  .pr-sido:hover{border-color:var(--line-2);box-shadow:0 6px 20px rgba(12,14,20,.06)}
+  .pr-sido h3{font-family:var(--display);font-size:15px;color:var(--ink);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  .pr-sido ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+  .pr-sido a{display:inline-block;font-size:13px;color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:6px 11px;text-decoration:none;transition:all .15s;white-space:nowrap}
+  .pr-sido a:hover{color:var(--neon-dim);background:var(--neon-soft);border-color:var(--neon)}
+  @media(max-width:600px){.pr-grid{grid-template-columns:1fr 1fr;gap:14px}.pr-sido{padding:16px 16px}.pr-sido a{font-size:12.5px;padding:5px 9px}}
   #products{background:var(--bg-2)}
   #process{background:var(--bg)}
   #screening{background:var(--bg-2)}
@@ -305,7 +312,7 @@
   <nav class="top-menu" id="topMenu">
     <a href="/card-terminal" class="active">카드단말기</a>
     <a href="javascript:void(0)" onclick="comingSoon('인터넷·가전')">인터넷·가전<span class="soon">준비중</span></a>
-    <a href="/vending">스마트자판기</a>
+    <a href="javascript:void(0)" onclick="comingSoon('스마트자판기')">스마트자판기<span class="soon">준비중</span></a>
     <a href="/demolition">철거·원상복구</a>
     <a href="#contact" class="menu-cta">무료 상담 신청</a>
   </nav>
@@ -692,6 +699,15 @@
   </div>
 </section>
 
+<section class="blk" id="pos-regions" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sec-label" style="text-align:center">POS BY REGION</div>
+    <h2 style="text-align:center;font-family:var(--display);font-size:clamp(24px,3vw,32px);margin:8px 0 10px">지역별 <span class="hl">포스기 설치</span></h2>
+    <p style="text-align:center;color:var(--muted);max-width:640px;margin:0 auto 36px;word-break:keep-all">우리 동네 상권에 맞는 포스기 구성을 확인해 보세요. 매출·재고 관리부터 배달앱 연동까지 지역 담당 매니저가 안내합니다.</p>
+    <div id="pos-region-grid" class="pr-grid"></div>
+  </div>
+</section>
+
 <footer class="one-foot">
   © 2026 <b>세이브샵 (SAVESHOP)</b> · thesaveshop.com · 상담 <a href="tel:010-4668-4942">010-4668-4942</a>
 </footer>
@@ -703,6 +719,35 @@
 
 <script>
   var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
+
+  // 지역별 포스기 배너 — 포스기 페이지가 열린 상권 목록.
+  // 지역 추가 시 해당 시·도 배열에 상권명만 넣으면 자동 반영됩니다.
+  // (worker의 KEYWORDS["포스기"].allowRegions와 동일하게 유지)
+  var POS_REGIONS = [
+    { sido: "서울",   list: ["강남역","홍대","성수","건대","잠실","신촌"] },
+    { sido: "경기",   list: ["광교","동탄1","분당","판교","일산","평촌"] },
+    { sido: "인천",   list: ["부평","송도","구월동"] },
+    { sido: "부산",   list: ["서면","해운대","남포동","전포"] },
+    { sido: "대구",   list: ["동성로","수성못","들안길"] },
+    { sido: "광주",   list: ["충장로","상무지구"] },
+    { sido: "대전",   list: ["둔산동","은행동"] },
+    { sido: "울산",   list: ["삼산동"] },
+    { sido: "경남",   list: ["상남동"] },
+    { sido: "경북",   list: ["포항"] },
+    { sido: "전북",   list: ["신시가지"] }
+  ];
+  (function renderPosRegions(){
+    var grid=document.getElementById('pos-region-grid');
+    if(!grid) return;
+    var html="";
+    POS_REGIONS.forEach(function(g){
+      var links=g.list.map(function(r){
+        return '<li><a href="/'+encodeURIComponent(r)+'/'+encodeURIComponent('포스기')+'">'+r+'</a></li>';
+      }).join("");
+      html+='<div class="pr-sido"><h3>'+g.sido+'</h3><ul>'+links+'</ul></div>';
+    });
+    grid.innerHTML=html;
+  })();
 
   // 햄버거
   var menuToggle=document.getElementById('menuToggle');
