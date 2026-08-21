@@ -721,6 +721,73 @@ const TEMPLATE = `<!DOCTYPE html>
 <script>
   var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
 
+  // ===== [추가] 연락처 자동 하이픈 + 유입 페이지·전화버튼 추적 =====
+  function fmtPhone(v,fin){
+    var d=String(v||'').replace(/[^0-9]/g,'');
+    if(d.indexOf('82')===0&&d.length>9) d='0'+d.slice(2);
+    d=d.slice(0,11);
+    if(d.indexOf('02')===0){
+      if(d.length<3) return d;
+      if(d.length<6) return d.slice(0,2)+'-'+d.slice(2);
+      if(d.length<10) return d.slice(0,2)+'-'+d.slice(2,5)+'-'+d.slice(5,9);
+      return d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6,10);
+    }
+    if(d.charAt(0)==='1'&&'5678'.indexOf(d.charAt(1))>-1&&d.length<=8){
+      if(d.length<5) return d;
+      return d.slice(0,4)+'-'+d.slice(4,8);
+    }
+    if(d.length<4) return d;
+    if(d.length<8) return d.slice(0,3)+'-'+d.slice(3);
+    if(fin&&d.length===10) return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6,10);
+    return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7,11);
+  }
+  function digitsOf(v){ return String(v||'').replace(/[^0-9]/g,''); }
+  (function bindPhone(){
+    var el=document.getElementById('phone');
+    if(!el) return;
+    el.setAttribute('inputmode','numeric');
+    el.addEventListener('input',function(){
+      var caret=el.selectionStart||0;
+      var before=digitsOf(el.value.slice(0,caret)).length;
+      var out=fmtPhone(el.value);
+      if(out===el.value) return;
+      el.value=out;
+      var pos=0,cnt=0;
+      while(pos<out.length&&cnt<before){ var ch=out.charAt(pos); if(ch>='0'&&ch<='9') cnt++; pos++; }
+      try{ el.setSelectionRange(pos,pos); }catch(e){}
+    });
+    el.addEventListener('blur',function(){ el.value=fmtPhone(el.value,1); });
+  })();
+  function pagePath(){ try{ return decodeURIComponent(location.pathname||'/'); }catch(e){ return location.pathname||'/'; } }
+  function callSpot(a){
+    var c=' '+(a.className||'')+' ';
+    if(c.indexOf('mb1')>-1) return '하단 고정바';
+    if(c.indexOf('top-phone')>-1||c.indexOf('top-call-icon')>-1) return '상단 헤더';
+    if(c.indexOf('btn-neon')>-1) return '상단 히어로';
+    if(c.indexOf('ctm')>-1) return '상담 섹션';
+    if(a.closest&&a.closest('footer')) return '푸터';
+    return '본문';
+  }
+  (function trackCall(){
+    if(!SHEET_ENDPOINT) return;
+    if(!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return;
+    var last=0;
+    document.addEventListener('click',function(ev){
+      var t=ev.target;
+      var a=(t&&t.closest)?t.closest('a[href^="tel:"]'):null;
+      if(!a) return;
+      var now=(new Date()).getTime();
+      if(now-last<3000) return;
+      last=now;
+      var payload=JSON.stringify({type:'call',page:pagePath(),spot:callSpot(a),ref:document.referrer||'',time:new Date().toLocaleString('ko-KR')});
+      try{
+        if(navigator.sendBeacon){ navigator.sendBeacon(SHEET_ENDPOINT,new Blob([payload],{type:'text/plain;charset=utf-8'})); }
+        else{ fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload}); }
+      }catch(e){}
+    },true);
+  })();
+
+
   // 햄버거
   var menuToggle=document.getElementById('menuToggle');
   var topMenu=document.getElementById('topMenu');
@@ -763,6 +830,9 @@ const TEMPLATE = `<!DOCTYPE html>
     var name=document.getElementById('name').value.trim();
     var phone=document.getElementById('phone').value.trim();
     if(!name||!phone){alert('성함과 연락처를 입력해 주세요.');return;}
+    phone=fmtPhone(phone,1);
+    if(digitsOf(phone).length<9){alert('연락처를 정확히 입력해 주세요. (예: 010-1234-5678)');return;}
+    document.getElementById('phone').value=phone;
     var items=[];
     document.querySelectorAll('#chips .nchip.on').forEach(function(c){items.push(c.textContent.trim());});
     var btn=document.querySelector('.nsubmit');
@@ -770,7 +840,7 @@ const TEMPLATE = `<!DOCTYPE html>
     if(region.indexOf('{{')!==-1||region==='전국') region='';
     if(!SHEET_ENDPOINT){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다.');return;}
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
-    var data={name:name,phone:phone,items:'[카드단말기'+(region?'/'+region:'')+'] '+items.join(', '),time:new Date().toLocaleString('ko-KR')};
+    var data={name:name,phone:phone,items:'[카드단말기'+(region?'/'+region:'')+'] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
     fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
       .then(function(){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
@@ -1516,6 +1586,73 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
 <script>
   var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
 
+  // ===== [추가] 연락처 자동 하이픈 + 유입 페이지·전화버튼 추적 =====
+  function fmtPhone(v,fin){
+    var d=String(v||'').replace(/[^0-9]/g,'');
+    if(d.indexOf('82')===0&&d.length>9) d='0'+d.slice(2);
+    d=d.slice(0,11);
+    if(d.indexOf('02')===0){
+      if(d.length<3) return d;
+      if(d.length<6) return d.slice(0,2)+'-'+d.slice(2);
+      if(d.length<10) return d.slice(0,2)+'-'+d.slice(2,5)+'-'+d.slice(5,9);
+      return d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6,10);
+    }
+    if(d.charAt(0)==='1'&&'5678'.indexOf(d.charAt(1))>-1&&d.length<=8){
+      if(d.length<5) return d;
+      return d.slice(0,4)+'-'+d.slice(4,8);
+    }
+    if(d.length<4) return d;
+    if(d.length<8) return d.slice(0,3)+'-'+d.slice(3);
+    if(fin&&d.length===10) return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6,10);
+    return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7,11);
+  }
+  function digitsOf(v){ return String(v||'').replace(/[^0-9]/g,''); }
+  (function bindPhone(){
+    var el=document.getElementById('phone');
+    if(!el) return;
+    el.setAttribute('inputmode','numeric');
+    el.addEventListener('input',function(){
+      var caret=el.selectionStart||0;
+      var before=digitsOf(el.value.slice(0,caret)).length;
+      var out=fmtPhone(el.value);
+      if(out===el.value) return;
+      el.value=out;
+      var pos=0,cnt=0;
+      while(pos<out.length&&cnt<before){ var ch=out.charAt(pos); if(ch>='0'&&ch<='9') cnt++; pos++; }
+      try{ el.setSelectionRange(pos,pos); }catch(e){}
+    });
+    el.addEventListener('blur',function(){ el.value=fmtPhone(el.value,1); });
+  })();
+  function pagePath(){ try{ return decodeURIComponent(location.pathname||'/'); }catch(e){ return location.pathname||'/'; } }
+  function callSpot(a){
+    var c=' '+(a.className||'')+' ';
+    if(c.indexOf('mb1')>-1) return '하단 고정바';
+    if(c.indexOf('top-phone')>-1||c.indexOf('top-call-icon')>-1) return '상단 헤더';
+    if(c.indexOf('btn-neon')>-1) return '상단 히어로';
+    if(c.indexOf('ctm')>-1) return '상담 섹션';
+    if(a.closest&&a.closest('footer')) return '푸터';
+    return '본문';
+  }
+  (function trackCall(){
+    if(!SHEET_ENDPOINT) return;
+    if(!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return;
+    var last=0;
+    document.addEventListener('click',function(ev){
+      var t=ev.target;
+      var a=(t&&t.closest)?t.closest('a[href^="tel:"]'):null;
+      if(!a) return;
+      var now=(new Date()).getTime();
+      if(now-last<3000) return;
+      last=now;
+      var payload=JSON.stringify({type:'call',page:pagePath(),spot:callSpot(a),ref:document.referrer||'',time:new Date().toLocaleString('ko-KR')});
+      try{
+        if(navigator.sendBeacon){ navigator.sendBeacon(SHEET_ENDPOINT,new Blob([payload],{type:'text/plain;charset=utf-8'})); }
+        else{ fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload}); }
+      }catch(e){}
+    },true);
+  })();
+
+
   // 햄버거
   var menuToggle=document.getElementById('menuToggle');
   var topMenu=document.getElementById('topMenu');
@@ -1573,13 +1710,16 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
     var addrDetail=document.getElementById('addrDetail').value.trim();
     var addr=(addrBase+' '+addrDetail).trim();
     if(!name||!phone){alert('성함과 연락처를 입력해 주세요.');return;}
+    phone=fmtPhone(phone,1);
+    if(digitsOf(phone).length<9){alert('연락처를 정확히 입력해 주세요. (예: 010-1234-5678)');return;}
+    document.getElementById('phone').value=phone;
     var items=[];
     document.querySelectorAll('#chips .nchip.on').forEach(function(c){items.push(c.textContent.trim());});
     var btn=document.querySelector('.nsubmit');
     var region=(document.querySelector('[data-region]')||{}).textContent||'';
     if(!SHEET_ENDPOINT){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다.');return;}
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
-    var data={name:name,phone:phone,address:addr,items:'[철거·원상복구] '+items.join(', '),time:new Date().toLocaleString('ko-KR')};
+    var data={name:name,phone:phone,address:addr,items:'[철거·원상복구] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
     fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
       .then(function(){alert(name+'님, 무료 견적 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.getElementById('addrBase').value='';document.getElementById('addrDetail').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
