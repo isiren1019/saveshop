@@ -842,7 +842,7 @@ const TEMPLATE = `<!DOCTYPE html>
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
     var data={name:name,phone:phone,items:'[카드단말기'+(region?'/'+region:'')+'] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
     fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
-      .then(function(){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
+      .then(function(){try{if(window.zenaTrack)window.zenaTrack('폼제출');}catch(e){}alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
       .finally(function(){btn.disabled=false;btn.textContent=orig;});
   }
@@ -1721,7 +1721,7 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
     var data={name:name,phone:phone,address:addr,items:'[철거·원상복구] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
     fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
-      .then(function(){alert(name+'님, 무료 견적 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.getElementById('addrBase').value='';document.getElementById('addrDetail').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
+      .then(function(){try{if(window.zenaTrack)window.zenaTrack('폼제출');}catch(e){}alert(name+'님, 무료 견적 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.getElementById('addrBase').value='';document.getElementById('addrDetail').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
       .finally(function(){btn.disabled=false;btn.textContent=orig;});
   }
@@ -5782,6 +5782,26 @@ function render(regionName, keywordName) {
 
 
 
+// --- 통합 기록기(tracker.js) 자동 삽입 ---
+// content-type이 text/html인 응답에만 HTMLRewriter로 </body> 바로 앞에 한 줄 끼워 넣는다.
+// HTML이 아닌 응답(이미지·favicon·webmanifest·js·xml 등)은 손대지 않는다.
+// ※ 정적 HTML 파일에 같은 태그를 직접 넣으면 두 번 로드되므로 넣지 말 것.
+const TRACKER_TAG = '<script src="/js/tracker.js" defer></script>';
+
+class TrackerInjector {
+  element(element) {
+    // body 요소의 끝(= </body> 바로 앞)에 삽입
+    element.append(TRACKER_TAG, { html: true });
+  }
+}
+
+function withTracker(response) {
+  const ct = (response.headers.get("content-type") || "").toLowerCase();
+  if (!ct.includes("text/html")) return response; // HTML이 아니면 그대로 통과
+  if (!response.body) return response; // 204/304 등 본문 없는 응답은 그대로
+  return new HTMLRewriter().on("body", new TrackerInjector()).transform(response);
+}
+
 // --- Cloudflare Worker 진입점 ---
 export default {
   async fetch(request, env) {
@@ -5859,16 +5879,19 @@ export default {
         // (예: 철거는 경기 등 지정 지역만. 강원·제주는 목록에 없어 제외됨)
         const allow = KEYWORDS[keyword].allowRegions;
         if (allow && !allow.includes(region)) {
-          return env.ASSETS.fetch(request); // 정적 처리(404 또는 /demolition 등)로 넘김
+          // 정적 처리(404 또는 /demolition 등)로 넘김
+          return withTracker(await env.ASSETS.fetch(request));
         }
         const html = render(region, keyword);
-        return new Response(html, {
-          headers: { "content-type": "text/html;charset=UTF-8" },
-        });
+        return withTracker(
+          new Response(html, {
+            headers: { "content-type": "text/html;charset=UTF-8" },
+          })
+        );
       }
     }
 
-    // 그 외 모든 요청은 기존 정적 파일로 넘김
-    return env.ASSETS.fetch(request);
+    // 그 외 모든 요청은 기존 정적 파일로 넘김 (HTML이면 tracker 자동 삽입)
+    return withTracker(await env.ASSETS.fetch(request));
   },
 };

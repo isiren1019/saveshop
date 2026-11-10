@@ -837,7 +837,7 @@ const TEMPLATE = `<!DOCTYPE html>
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
     var data={name:name,phone:phone,items:'[카드단말기'+(region?'/'+region:'')+'] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
     fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
-      .then(function(){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
+      .then(function(){try{if(window.zenaTrack)window.zenaTrack('폼제출');}catch(e){}alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
       .finally(function(){btn.disabled=false;btn.textContent=orig;});
   }

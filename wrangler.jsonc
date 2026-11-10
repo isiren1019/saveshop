@@ -5,6 +5,22 @@
   "assets": {
     "directory": "./public/",
     "binding": "ASSETS",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+
+    // 정적 HTML도 Worker를 먼저 거치게 한다 (tracker.js 자동 삽입을 위해).
+    // Cloudflare 기본값은 "자산 우선" — 일치하는 정적 파일이 있으면 Worker를 호출하지 않으므로,
+    // 이 목록이 없으면 정적 4페이지에는 tracker.js가 붙지 않는다.
+    // 이미지·파비콘·webmanifest·/js/tracker.js 등은 목록에 없으므로 기존처럼
+    // 자산 우선으로 서빙되고 Worker를 호출하지 않는다(요청 비용·지연 영향 없음).
+    "run_worker_first": [
+      "/",
+      "/index.html",
+      "/card-terminal",
+      "/card-terminal.html",
+      "/demolition",
+      "/demolition.html",
+      "/vending",
+      "/vending.html"
+    ]
   }
 }

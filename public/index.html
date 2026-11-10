@@ -864,7 +864,7 @@
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(data)
     })
-      .then(function(){
+      .then(function(){try{if(window.zenaTrack)window.zenaTrack('폼제출');}catch(e){}
         alert(name+'님, 상담 신청이 접수되었습니다.\n순차적으로 연락드리겠습니다. 감사합니다.');
         document.getElementById('name').value='';
         document.getElementById('phone').value='';
