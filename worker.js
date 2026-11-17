@@ -260,6 +260,8 @@ const TEMPLATE = `<!DOCTYPE html>
   .nchip{font-size:11.5px;font-weight:500;cursor:pointer;padding:11px 4px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg);color:var(--muted);transition:all .15s;user-select:none;text-align:center;white-space:nowrap}
   .nchip:hover{border-color:var(--neon);color:var(--ink)}
   .nchip.on{background:var(--neon);color:#fff;border-color:var(--neon);font-weight:600}
+  .hp-wrap{position:absolute!important;left:-9999px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden}
+  .ts-box{margin:0;line-height:0}
   .nsubmit{width:100%;font-family:var(--display);font-weight:600;font-size:16px;padding:17px;border:none;border-radius:13px;background:var(--neon);color:#fff;cursor:pointer;margin-top:8px;transition:all .15s}
   .nsubmit:hover{box-shadow:0 14px 34px -12px var(--neon);transform:translateY(-1px)}
   .fnote{font-size:11.5px;color:var(--muted-2);text-align:center;margin-top:13px}
@@ -701,6 +703,8 @@ const TEMPLATE = `<!DOCTYPE html>
           <span class="nchip" onclick="toggleChip(this)">상담희망</span>
         </div>
       </div>
+      <div class="hp-wrap" aria-hidden="true"><label for="hp_field">메모</label><input id="hp_field" name="hp_field" type="text" tabindex="-1" autocomplete="off"></div>
+      <div id="ts-box" class="ts-box"></div>
       <button class="nsubmit" onclick="submitForm()">상담 신청하기</button>
       <p class="fnote">상담 신청 시 개인정보 수집·이용에 동의하는 것으로 간주됩니다. 입력하신 정보는 상담 목적으로만 사용됩니다.</p>
     </div>
@@ -719,7 +723,42 @@ const TEMPLATE = `<!DOCTYPE html>
 </div>
 
 <script>
-  var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
+  // ===== [스팸 방지] 제출 경로를 Worker로 변경 + Turnstile / 지연 / 하니포트 =====
+  // 상담 접수는 브라우저 → Worker(/api/inquiry) → Apps Script 순서로 전달된다.
+  // Apps Script 주소는 Cloudflare 환경변수에만 있고 이 페이지에는 더 이상 없다.
+  var SHEET_ENDPOINT = "/api/inquiry";   // 상담 접수 (Worker가 검증 후 전달)
+  var CALL_ENDPOINT  = "/api/call";      // 전화클릭 기록 (Worker 경유)
+  var TS_SITEKEY = "0x4AAAAAAGEZ2H9WNi8-OSsz";
+
+  var pageOpenedAt = (new Date()).getTime();
+  var tsWidget = null, tsWaiting = null;
+
+  function tsDone(tok){
+    if(!tsWaiting) return;
+    var cb = tsWaiting; tsWaiting = null; cb(tok || '');
+  }
+  // Turnstile api.js 의 onload 콜백 (전역이어야 함)
+  window.tsInit = function(){
+    var box = document.getElementById('ts-box');
+    if(!box || !window.turnstile) return;
+    try{
+      tsWidget = turnstile.render(box, {
+        sitekey: TS_SITEKEY,
+        execution: 'execute',            // 제출할 때만 검사 실행
+        appearance: 'interaction-only',  // 사람 손이 필요할 때만 화면에 나타남
+        callback: function(tok){ tsDone(tok); },
+        'error-callback': function(){ tsDone(''); return true; },
+        'expired-callback': function(){ tsDone(''); }
+      });
+    }catch(e){ tsWidget = null; }
+  };
+  function tsToken(cb){
+    if(!window.turnstile || tsWidget === null){ cb(''); return; }
+    tsWaiting = cb;
+    setTimeout(function(){ tsDone(''); }, 20000);  // 응답 없으면 빈 토큰으로 진행
+    try{ turnstile.reset(tsWidget); turnstile.execute(tsWidget); }
+    catch(e){ tsDone(''); }
+  }
 
   // ===== [추가] 연락처 자동 하이픈 + 유입 페이지·전화버튼 추적 =====
   function fmtPhone(v,fin){
@@ -781,8 +820,8 @@ const TEMPLATE = `<!DOCTYPE html>
       last=now;
       var payload=JSON.stringify({type:'call',page:pagePath(),spot:callSpot(a),ref:document.referrer||'',time:new Date().toLocaleString('ko-KR')});
       try{
-        if(navigator.sendBeacon){ navigator.sendBeacon(SHEET_ENDPOINT,new Blob([payload],{type:'text/plain;charset=utf-8'})); }
-        else{ fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload}); }
+        if(navigator.sendBeacon){ navigator.sendBeacon(CALL_ENDPOINT,new Blob([payload],{type:'text/plain;charset=utf-8'})); }
+        else{ fetch(CALL_ENDPOINT,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json;charset=utf-8'},body:payload}); }
       }catch(e){}
     },true);
   })();
@@ -839,9 +878,13 @@ const TEMPLATE = `<!DOCTYPE html>
     var region=(document.querySelector('[data-region]')||{}).textContent||'';
     if(region.indexOf('{{')!==-1||region==='전국') region='';
     if(!SHEET_ENDPOINT){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다.');return;}
+    var hp=(document.getElementById('hp_field')||{}).value||'';
+    if(!window.__tsTok){ var o0=btn.textContent; btn.disabled=true; btn.textContent='확인 중...';
+      tsToken(function(tok){ window.__tsTok=tok||'none'; btn.disabled=false; btn.textContent=o0; submitForm(); }); return; }
+    var tsTok=(window.__tsTok==='none')?'':window.__tsTok; window.__tsTok=null;
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
-    var data={name:name,phone:phone,items:'[카드단말기'+(region?'/'+region:'')+'] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
-    fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
+    var data={name:name,phone:phone,items:'[카드단말기'+(region?'/'+region:'')+'] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||'',ts:tsTok,hp_field:hp,elapsed:(new Date()).getTime()-pageOpenedAt};
+    fetch(SHEET_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json;charset=utf-8'},body:JSON.stringify(data)}).then(function(r){if(!r.ok)throw 0;})
       .then(function(){try{if(window.zenaTrack)window.zenaTrack('폼제출');}catch(e){}alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
       .finally(function(){btn.disabled=false;btn.textContent=orig;});
@@ -910,6 +953,7 @@ const TEMPLATE = `<!DOCTYPE html>
   })();
 
 </script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsInit" async defer></script>
 </body>
 </html>
 `;
@@ -1194,6 +1238,8 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
   .nchip{font-size:11.5px;font-weight:500;cursor:pointer;padding:11px 4px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg);color:var(--muted);transition:all .15s;user-select:none;text-align:center;white-space:nowrap}
   .nchip:hover{border-color:var(--neon);color:var(--ink)}
   .nchip.on{background:var(--neon);color:#fff;border-color:var(--neon);font-weight:600}
+  .hp-wrap{position:absolute!important;left:-9999px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden}
+  .ts-box{margin:0;line-height:0}
   .nsubmit{width:100%;font-family:var(--display);font-weight:600;font-size:16px;padding:17px;border:none;border-radius:13px;background:var(--neon);color:#fff;cursor:pointer;margin-top:8px;transition:all .15s}
   .addr-row{display:flex;gap:7px}
   .addr-row input{flex:1;cursor:pointer;background:var(--bg)}
@@ -1568,6 +1614,8 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
         </div>
         <input id="addrDetail" type="text" placeholder="상세주소 (층/호수 등) — 예: 3층 전체" style="margin-top:7px">
       </div>
+      <div class="hp-wrap" aria-hidden="true"><label for="hp_field">메모</label><input id="hp_field" name="hp_field" type="text" tabindex="-1" autocomplete="off"></div>
+      <div id="ts-box" class="ts-box"></div>
       <button class="nsubmit" onclick="submitForm()">무료 견적 신청하기</button>
       <p class="fnote">상담 신청 시 개인정보 수집·이용에 동의하는 것으로 간주됩니다. 입력하신 정보는 상담 목적으로만 사용됩니다.</p>
     </div>
@@ -1584,7 +1632,42 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
 </div>
 
 <script>
-  var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw0pYJJJY2GpA0b4fm2a7efyv04YDctXjuOIoQ_t_WLTlNwYPLESd7PIvOZVSCkrNVq/exec";
+  // ===== [스팸 방지] 제출 경로를 Worker로 변경 + Turnstile / 지연 / 하니포트 =====
+  // 상담 접수는 브라우저 → Worker(/api/inquiry) → Apps Script 순서로 전달된다.
+  // Apps Script 주소는 Cloudflare 환경변수에만 있고 이 페이지에는 더 이상 없다.
+  var SHEET_ENDPOINT = "/api/inquiry";   // 상담 접수 (Worker가 검증 후 전달)
+  var CALL_ENDPOINT  = "/api/call";      // 전화클릭 기록 (Worker 경유)
+  var TS_SITEKEY = "0x4AAAAAAGEZ2H9WNi8-OSsz";
+
+  var pageOpenedAt = (new Date()).getTime();
+  var tsWidget = null, tsWaiting = null;
+
+  function tsDone(tok){
+    if(!tsWaiting) return;
+    var cb = tsWaiting; tsWaiting = null; cb(tok || '');
+  }
+  // Turnstile api.js 의 onload 콜백 (전역이어야 함)
+  window.tsInit = function(){
+    var box = document.getElementById('ts-box');
+    if(!box || !window.turnstile) return;
+    try{
+      tsWidget = turnstile.render(box, {
+        sitekey: TS_SITEKEY,
+        execution: 'execute',            // 제출할 때만 검사 실행
+        appearance: 'interaction-only',  // 사람 손이 필요할 때만 화면에 나타남
+        callback: function(tok){ tsDone(tok); },
+        'error-callback': function(){ tsDone(''); return true; },
+        'expired-callback': function(){ tsDone(''); }
+      });
+    }catch(e){ tsWidget = null; }
+  };
+  function tsToken(cb){
+    if(!window.turnstile || tsWidget === null){ cb(''); return; }
+    tsWaiting = cb;
+    setTimeout(function(){ tsDone(''); }, 20000);  // 응답 없으면 빈 토큰으로 진행
+    try{ turnstile.reset(tsWidget); turnstile.execute(tsWidget); }
+    catch(e){ tsDone(''); }
+  }
 
   // ===== [추가] 연락처 자동 하이픈 + 유입 페이지·전화버튼 추적 =====
   function fmtPhone(v,fin){
@@ -1646,8 +1729,8 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
       last=now;
       var payload=JSON.stringify({type:'call',page:pagePath(),spot:callSpot(a),ref:document.referrer||'',time:new Date().toLocaleString('ko-KR')});
       try{
-        if(navigator.sendBeacon){ navigator.sendBeacon(SHEET_ENDPOINT,new Blob([payload],{type:'text/plain;charset=utf-8'})); }
-        else{ fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload}); }
+        if(navigator.sendBeacon){ navigator.sendBeacon(CALL_ENDPOINT,new Blob([payload],{type:'text/plain;charset=utf-8'})); }
+        else{ fetch(CALL_ENDPOINT,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json;charset=utf-8'},body:payload}); }
       }catch(e){}
     },true);
   })();
@@ -1718,9 +1801,13 @@ const TEMPLATE_DEMOLITION = `<!DOCTYPE html>
     var btn=document.querySelector('.nsubmit');
     var region=(document.querySelector('[data-region]')||{}).textContent||'';
     if(!SHEET_ENDPOINT){alert(name+'님, 상담 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다.');return;}
+    var hp=(document.getElementById('hp_field')||{}).value||'';
+    if(!window.__tsTok){ var o0=btn.textContent; btn.disabled=true; btn.textContent='확인 중...';
+      tsToken(function(tok){ window.__tsTok=tok||'none'; btn.disabled=false; btn.textContent=o0; submitForm(); }); return; }
+    var tsTok=(window.__tsTok==='none')?'':window.__tsTok; window.__tsTok=null;
     btn.disabled=true; var orig=btn.textContent; btn.textContent='접수 중...';
-    var data={name:name,phone:phone,address:addr,items:'[철거·원상복구] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||''};
-    fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
+    var data={name:name,phone:phone,address:addr,items:'[철거·원상복구] '+items.join(', '),time:new Date().toLocaleString('ko-KR'),page:pagePath(),ref:document.referrer||'',ts:tsTok,hp_field:hp,elapsed:(new Date()).getTime()-pageOpenedAt};
+    fetch(SHEET_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json;charset=utf-8'},body:JSON.stringify(data)}).then(function(r){if(!r.ok)throw 0;})
       .then(function(){try{if(window.zenaTrack)window.zenaTrack('폼제출');}catch(e){}alert(name+'님, 무료 견적 신청이 접수되었습니다.\\n순차적으로 연락드리겠습니다. 감사합니다.');document.getElementById('name').value='';document.getElementById('phone').value='';document.getElementById('addrBase').value='';document.getElementById('addrDetail').value='';document.querySelectorAll('#chips .nchip.on').forEach(function(c){c.classList.remove('on');});})
       .catch(function(){alert('일시적인 오류로 접수에 실패했습니다.\\n전화(010-4668-4942)로 문의해 주세요.');})
       .finally(function(){btn.disabled=false;btn.textContent=orig;});
@@ -1754,6 +1841,7 @@ function toggleFaq(btn){
 }
 
 </script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsInit" async defer></script>
 </body>
 </html>
 `;
@@ -5782,6 +5870,172 @@ function render(regionName, keywordName) {
 
 
 
+// --- 상담 접수 API (스팸 방지) ---
+// 브라우저 → 이 Worker → Apps Script. 아래 세 검사를 모두 통과해야 저장한다.
+//   ① Cloudflare Turnstile 토큰 검증 (env.TURNSTILE_SECRET)
+//   ② 페이지 열고 10초 안에 들어온 제출은 무시
+//   ③ 숨은 입력칸(hp_field)에 값이 있으면 무시
+// 걸러진 제출은 상담 시트·메일에 넣지 않지만 "차단로그" 시트에는 남기고,
+// 화면에는 정상 접수와 똑같이 보이도록 200 OK 만 돌려준다.
+//
+// 필요한 환경변수 (Cloudflare 대시보드 → Workers → saveshop → Settings → Variables)
+//   TURNSTILE_SECRET : Turnstile 비밀 키            (Secret)
+//   SHEET_ENDPOINT   : Apps Script 웹앱 /exec 주소  (Secret 권장)
+//   SHEET_KEY        : Apps Script와 맞춘 공유키    (Secret)
+const MIN_FILL_MS = 10000;
+
+// Turnstile 스크립트(api.js) 자체가 안 뜬 경우(토큰 없음)를 어떻게 다룰지.
+//   true  = 저장하지 않는다 (기본, 요청대로). 광고차단기·사내망·일부 보안프로그램 때문에
+//           api.js 가 차단된 "진짜 손님"의 문의도 사라진다. 단 "차단로그" 시트에
+//           reason=no-token 으로 이름·연락처가 남으므로 전화로 회수할 수 있다.
+//   false = 지연(10초)·하니포트는 통과했고 토큰만 없는 경우에는 저장하되,
+//           관심품목 앞에 "[미검증]" 을 붙여 구분할 수 있게 한다.
+const BLOCK_WHEN_NO_TOKEN = true;
+
+function apiJson(body, status) {
+  return new Response(JSON.stringify(body), {
+    status: status || 200,
+    headers: {
+      "content-type": "application/json;charset=UTF-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
+async function verifyTurnstile(token, ip, env) {
+  const secret = env.TURNSTILE_SECRET || "";
+  if (!secret) return { ok: false, why: "secret-missing" };
+  const form = new URLSearchParams();
+  form.set("secret", secret);
+  form.set("response", token);
+  if (ip) form.set("remoteip", ip);
+  try {
+    form.set("idempotency_key", crypto.randomUUID());
+  } catch (e) {}
+  try {
+    const r = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      }
+    );
+    const j = await r.json();
+    if (j && j.success) return { ok: true };
+    return { ok: false, why: ((j && j["error-codes"]) || []).join(",") || "failed" };
+  } catch (e) {
+    return { ok: false, why: "verify-error" };
+  }
+}
+
+// Apps Script 로 전달. 공유키를 함께 보내므로, 키 없는 직접 POST는 Apps Script가 거부한다.
+async function toSheet(env, payload) {
+  const endpoint = env.SHEET_ENDPOINT || "";
+  if (!endpoint) return null;
+  return fetch(endpoint, {
+    method: "POST",
+    headers: { "content-type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ key: env.SHEET_KEY || "" }, payload)),
+  });
+}
+
+function cut(v, n) {
+  return String(v == null ? "" : v).slice(0, n);
+}
+
+async function handleInquiry(request, env) {
+  let d;
+  try {
+    d = await request.json();
+  } catch (e) {
+    return apiJson({ ok: true });
+  }
+  const ip = request.headers.get("cf-connecting-ip") || "";
+
+  let blocked = "";
+  let unverified = false;
+  // ③ 하니포트
+  if (cut(d.hp_field, 200).trim() !== "") blocked = "honeypot";
+  // ② 작성 시간
+  if (!blocked) {
+    const el = Number(d.elapsed);
+    if (!isFinite(el) || el < MIN_FILL_MS) blocked = "too-fast";
+  }
+  // ① Turnstile
+  if (!blocked) {
+    const tok = cut(d.ts, 4096);
+    if (!tok) {
+      if (BLOCK_WHEN_NO_TOKEN) blocked = "no-token";
+      else unverified = true;
+    } else {
+      const v = await verifyTurnstile(tok, ip, env);
+      if (!v.ok) blocked = "turnstile:" + v.why;
+    }
+  }
+  // 필수값
+  if (!blocked && (!cut(d.name, 100).trim() || !cut(d.phone, 50).trim())) {
+    blocked = "empty";
+  }
+
+  if (blocked) {
+    try {
+      await toSheet(env, {
+        type: "blocked",
+        reason: blocked,
+        name: cut(d.name, 50),
+        phone: cut(d.phone, 30),
+        items: cut(d.items, 200),
+        page: cut(d.page, 200),
+        ref: cut(d.ref, 300),
+        ip: ip,
+        ua: cut(request.headers.get("user-agent"), 200),
+        time: cut(d.time, 60) || new Date().toISOString(),
+      });
+    } catch (e) {}
+    // 화면에는 정상 접수처럼 보이게 한다
+    return apiJson({ ok: true });
+  }
+
+  let res = null;
+  try {
+    res = await toSheet(env, {
+      name: cut(d.name, 100),
+      phone: cut(d.phone, 50),
+      address: cut(d.address, 300),
+      items: (unverified ? "[미검증] " : "") + cut(d.items, 500),
+      time: cut(d.time, 60) || new Date().toISOString(),
+      page: cut(d.page, 200),
+      ref: cut(d.ref, 300),
+    });
+  } catch (e) {
+    res = null;
+  }
+  // 실제 저장 실패는 숨기지 않는다 (페이지가 전화 안내를 띄움)
+  if (!res || !res.ok) return apiJson({ ok: false }, 502);
+  return apiJson({ ok: true });
+}
+
+// 전화클릭 기록 — 공유키를 붙이기 위해 Worker를 경유시킨다 (검증 대상 아님)
+async function handleCall(request, env) {
+  let d;
+  try {
+    d = await request.json();
+  } catch (e) {
+    return apiJson({ ok: true });
+  }
+  try {
+    await toSheet(env, {
+      type: "call",
+      page: cut(d.page, 200),
+      spot: cut(d.spot, 40),
+      ref: cut(d.ref, 300),
+      time: cut(d.time, 60) || new Date().toISOString(),
+    });
+  } catch (e) {}
+  return apiJson({ ok: true });
+}
+
 // --- 통합 기록기(tracker.js) 자동 삽입 ---
 // content-type이 text/html인 응답에만 HTMLRewriter로 </body> 바로 앞에 한 줄 끼워 넣는다.
 // HTML이 아닌 응답(이미지·favicon·webmanifest·js·xml 등)은 손대지 않는다.
@@ -5866,6 +6120,16 @@ export default {
       return new Response(body, {
         headers: { "content-type": "application/xml;charset=UTF-8" },
       });
+    }
+
+    // 상담 접수 / 전화클릭 기록 — 스팸 방지 검증 후 Apps Script로 전달
+    if (pathname === "/api/inquiry" || pathname === "/api/call") {
+      if (request.method !== "POST") {
+        return new Response("Method Not Allowed", { status: 405 });
+      }
+      return pathname === "/api/inquiry"
+        ? handleInquiry(request, env)
+        : handleCall(request, env);
     }
 
     // 한글 URL 디코딩 (/광교/카드단말기)

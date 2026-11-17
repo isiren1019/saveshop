@@ -256,6 +256,172 @@ function render(regionName, keywordName) {
 
 
 
+// --- 상담 접수 API (스팸 방지) ---
+// 브라우저 → 이 Worker → Apps Script. 아래 세 검사를 모두 통과해야 저장한다.
+//   ① Cloudflare Turnstile 토큰 검증 (env.TURNSTILE_SECRET)
+//   ② 페이지 열고 10초 안에 들어온 제출은 무시
+//   ③ 숨은 입력칸(hp_field)에 값이 있으면 무시
+// 걸러진 제출은 상담 시트·메일에 넣지 않지만 "차단로그" 시트에는 남기고,
+// 화면에는 정상 접수와 똑같이 보이도록 200 OK 만 돌려준다.
+//
+// 필요한 환경변수 (Cloudflare 대시보드 → Workers → saveshop → Settings → Variables)
+//   TURNSTILE_SECRET : Turnstile 비밀 키            (Secret)
+//   SHEET_ENDPOINT   : Apps Script 웹앱 /exec 주소  (Secret 권장)
+//   SHEET_KEY        : Apps Script와 맞춘 공유키    (Secret)
+const MIN_FILL_MS = 10000;
+
+// Turnstile 스크립트(api.js) 자체가 안 뜬 경우(토큰 없음)를 어떻게 다룰지.
+//   true  = 저장하지 않는다 (기본, 요청대로). 광고차단기·사내망·일부 보안프로그램 때문에
+//           api.js 가 차단된 "진짜 손님"의 문의도 사라진다. 단 "차단로그" 시트에
+//           reason=no-token 으로 이름·연락처가 남으므로 전화로 회수할 수 있다.
+//   false = 지연(10초)·하니포트는 통과했고 토큰만 없는 경우에는 저장하되,
+//           관심품목 앞에 "[미검증]" 을 붙여 구분할 수 있게 한다.
+const BLOCK_WHEN_NO_TOKEN = true;
+
+function apiJson(body, status) {
+  return new Response(JSON.stringify(body), {
+    status: status || 200,
+    headers: {
+      "content-type": "application/json;charset=UTF-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
+async function verifyTurnstile(token, ip, env) {
+  const secret = env.TURNSTILE_SECRET || "";
+  if (!secret) return { ok: false, why: "secret-missing" };
+  const form = new URLSearchParams();
+  form.set("secret", secret);
+  form.set("response", token);
+  if (ip) form.set("remoteip", ip);
+  try {
+    form.set("idempotency_key", crypto.randomUUID());
+  } catch (e) {}
+  try {
+    const r = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      }
+    );
+    const j = await r.json();
+    if (j && j.success) return { ok: true };
+    return { ok: false, why: ((j && j["error-codes"]) || []).join(",") || "failed" };
+  } catch (e) {
+    return { ok: false, why: "verify-error" };
+  }
+}
+
+// Apps Script 로 전달. 공유키를 함께 보내므로, 키 없는 직접 POST는 Apps Script가 거부한다.
+async function toSheet(env, payload) {
+  const endpoint = env.SHEET_ENDPOINT || "";
+  if (!endpoint) return null;
+  return fetch(endpoint, {
+    method: "POST",
+    headers: { "content-type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ key: env.SHEET_KEY || "" }, payload)),
+  });
+}
+
+function cut(v, n) {
+  return String(v == null ? "" : v).slice(0, n);
+}
+
+async function handleInquiry(request, env) {
+  let d;
+  try {
+    d = await request.json();
+  } catch (e) {
+    return apiJson({ ok: true });
+  }
+  const ip = request.headers.get("cf-connecting-ip") || "";
+
+  let blocked = "";
+  let unverified = false;
+  // ③ 하니포트
+  if (cut(d.hp_field, 200).trim() !== "") blocked = "honeypot";
+  // ② 작성 시간
+  if (!blocked) {
+    const el = Number(d.elapsed);
+    if (!isFinite(el) || el < MIN_FILL_MS) blocked = "too-fast";
+  }
+  // ① Turnstile
+  if (!blocked) {
+    const tok = cut(d.ts, 4096);
+    if (!tok) {
+      if (BLOCK_WHEN_NO_TOKEN) blocked = "no-token";
+      else unverified = true;
+    } else {
+      const v = await verifyTurnstile(tok, ip, env);
+      if (!v.ok) blocked = "turnstile:" + v.why;
+    }
+  }
+  // 필수값
+  if (!blocked && (!cut(d.name, 100).trim() || !cut(d.phone, 50).trim())) {
+    blocked = "empty";
+  }
+
+  if (blocked) {
+    try {
+      await toSheet(env, {
+        type: "blocked",
+        reason: blocked,
+        name: cut(d.name, 50),
+        phone: cut(d.phone, 30),
+        items: cut(d.items, 200),
+        page: cut(d.page, 200),
+        ref: cut(d.ref, 300),
+        ip: ip,
+        ua: cut(request.headers.get("user-agent"), 200),
+        time: cut(d.time, 60) || new Date().toISOString(),
+      });
+    } catch (e) {}
+    // 화면에는 정상 접수처럼 보이게 한다
+    return apiJson({ ok: true });
+  }
+
+  let res = null;
+  try {
+    res = await toSheet(env, {
+      name: cut(d.name, 100),
+      phone: cut(d.phone, 50),
+      address: cut(d.address, 300),
+      items: (unverified ? "[미검증] " : "") + cut(d.items, 500),
+      time: cut(d.time, 60) || new Date().toISOString(),
+      page: cut(d.page, 200),
+      ref: cut(d.ref, 300),
+    });
+  } catch (e) {
+    res = null;
+  }
+  // 실제 저장 실패는 숨기지 않는다 (페이지가 전화 안내를 띄움)
+  if (!res || !res.ok) return apiJson({ ok: false }, 502);
+  return apiJson({ ok: true });
+}
+
+// 전화클릭 기록 — 공유키를 붙이기 위해 Worker를 경유시킨다 (검증 대상 아님)
+async function handleCall(request, env) {
+  let d;
+  try {
+    d = await request.json();
+  } catch (e) {
+    return apiJson({ ok: true });
+  }
+  try {
+    await toSheet(env, {
+      type: "call",
+      page: cut(d.page, 200),
+      spot: cut(d.spot, 40),
+      ref: cut(d.ref, 300),
+      time: cut(d.time, 60) || new Date().toISOString(),
+    });
+  } catch (e) {}
+  return apiJson({ ok: true });
+}
+
 // --- 통합 기록기(tracker.js) 자동 삽입 ---
 // content-type이 text/html인 응답에만 HTMLRewriter로 </body> 바로 앞에 한 줄 끼워 넣는다.
 // HTML이 아닌 응답(이미지·favicon·webmanifest·js·xml 등)은 손대지 않는다.
@@ -340,6 +506,16 @@ export default {
       return new Response(body, {
         headers: { "content-type": "application/xml;charset=UTF-8" },
       });
+    }
+
+    // 상담 접수 / 전화클릭 기록 — 스팸 방지 검증 후 Apps Script로 전달
+    if (pathname === "/api/inquiry" || pathname === "/api/call") {
+      if (request.method !== "POST") {
+        return new Response("Method Not Allowed", { status: 405 });
+      }
+      return pathname === "/api/inquiry"
+        ? handleInquiry(request, env)
+        : handleCall(request, env);
     }
 
     // 한글 URL 디코딩 (/광교/카드단말기)

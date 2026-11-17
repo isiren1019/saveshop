@@ -13,6 +13,7 @@
     // 이미지·파비콘·webmanifest·/js/tracker.js 등은 목록에 없으므로 기존처럼
     // 자산 우선으로 서빙되고 Worker를 호출하지 않는다(요청 비용·지연 영향 없음).
     "run_worker_first": [
+      "/api/*",
       "/",
       "/index.html",
       "/card-terminal",
